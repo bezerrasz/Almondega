@@ -1,7 +1,5 @@
 import sys
 from PySide6.QtWidgets import QApplication
-
-# Aqui nós importamos o Controller que você acabou de criar no Passo 2
 from controller.dashboard_controller import DashboardController
 
 def main():
