@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">/* Pinta o fundo da janela de cinza escuro */
+QDialog {
+    background-color: #2b2b2b;
+}
+
+/* Pinta todos os textos de branco e deixa em negrito */
+QLabel {
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* Estiliza as caixinhas preservando as setinhas nativas (Sem bordas e sem padding!) */
+QSpinBox, QDoubleSpinBox {
+    background-color: #1e1e1e;
+    color: #ffffff;
+    font-size: 14px;
+}
+
+/* Quando você clica na caixinha para digitar (Foco), clareia o fundo em vez de criar borda */
+QSpinBox:focus, QDoubleSpinBox:focus {
+    background-color: #3a3a3a; 
+}
+
+/* Estiliza o botão de Salvar */
+QPushButton {
+    background-color: #00aa00; 
+    color: white;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* Quando passa o mouse por cima do botão, ele fica com um verde mais claro */
+QPushButton:hover {
+    background-color: #00cc00; 
+}</string>
+  </property>
+  <widget class="QPushButton" name="btn_salvar">
+   <property name="geometry">
+    <rect>
+     <x>130</x>
+     <y>250</y>
+     <width>121</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Salvar e Fechar</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_3">
+   <property name="geometry">
+    <rect>
+     <x>90</x>
+     <y>30</y>
+     <width>221</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Gill Sans</family>
+     <pointsize>-1</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Configuração de Limites</string>
+   </property>
+  </widget>
+  <widget class="QSplitter" name="splitter">
+   <property name="geometry">
+    <rect>
+     <x>90</x>
+     <y>160</y>
+     <width>212</width>
+     <height>58</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Orientation::Vertical</enum>
+   </property>
+   <widget class="QLabel" name="label_2">
+    <property name="text">
+     <string>Limite Máximo de Corrente (A):</string>
+    </property>
+   </widget>
+   <widget class="QDoubleSpinBox" name="spin_limite_corrente">
+    <property name="maximum">
+     <double>100.000000000000000</double>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QSplitter" name="splitter_2">
+   <property name="geometry">
+    <rect>
+     <x>100</x>
+     <y>80</y>
+     <width>198</width>
+     <height>58</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Orientation::Vertical</enum>
+   </property>
+   <widget class="QLabel" name="label">
+    <property name="text">
+     <string>Limite Máximo de Tensão (V):</string>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="spin_limite_tensao">
+    <property name="maximum">
+     <number>500</number>
+    </property>
+   </widget>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

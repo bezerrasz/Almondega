@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QVBoxLayout
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 import random
+from controller.config_controller import ConfigController
 
 class DashboardController(QDialog):
     def __init__(self):
@@ -23,6 +24,10 @@ class DashboardController(QDialog):
         self.ui.slider_limite.valueChanged.connect(self.mostrar_valor_bolinha)
 
         self.ui.chk_simulador.toggled.connect(self.atualizar_status_led)
+
+        self.ui.btn_config_limites.clicked.connect(self.abrir_tela_configuracao)
+        self.ui.btn_tela_serial.clicked.connect(self.abrir_tela_serial)
+        self.ui.btn_tela_historico.clicked.connect(self.abrir_tela_historico)
 
 
     def acionar_emergencia(self):
@@ -72,3 +77,26 @@ class DashboardController(QDialog):
             self.ui.lbl_status_disjuntor.setStyleSheet(
                 "background-color: red; color: white; font-weight: bold; border-radius: 20px; qproperty-alignment: AlignCenter;"
             )
+
+    # TESTAR LIMITES TELA 2
+    def abrir_tela_configuracao(self):
+        tela_config = ConfigController()
+        
+        if tela_config.exec() == QDialog.Accepted:
+            
+            nova_tensao = tela_config.limite_tensao
+            nova_corrente = tela_config.limite_corrente
+            
+            self.setpoint_tensao = nova_tensao
+            self.setpoint_corrente = nova_corrente
+            
+            print(f"REGRA ATUALIZADA -> Tensão Máx: {self.setpoint_tensao} V | Corrente Máx: {self.setpoint_corrente} A")
+            
+            QMessageBox.information(self, "Sucesso", "Limites de proteção atualizados com sucesso!")
+
+    # Esqueletos para as próximas telas:
+    def abrir_tela_serial(self):
+        print("Em breve: Aqui vai abrir a tela de Comunicação Serial!")
+
+    def abrir_tela_historico(self):
+        print("Em breve: Aqui vai abrir a tela de Histórico!")

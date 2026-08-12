@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>849</width>
-    <height>399</height>
+    <height>449</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -336,7 +336,7 @@ QPushButton:pressed {
      <x>320</x>
      <y>20</y>
      <width>511</width>
-     <height>361</height>
+     <height>411</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -345,6 +345,39 @@ QPushButton:pressed {
      <verstretch>0</verstretch>
     </sizepolicy>
    </property>
+  </widget>
+  <widget class="QWidget" name="">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>400</y>
+     <width>291</width>
+     <height>28</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <item alignment="Qt::AlignmentFlag::AlignLeft">
+     <widget class="QPushButton" name="btn_tela_serial">
+      <property name="text">
+       <string>Serial</string>
+      </property>
+     </widget>
+    </item>
+    <item alignment="Qt::AlignmentFlag::AlignHCenter">
+     <widget class="QPushButton" name="btn_config_limites">
+      <property name="text">
+       <string>Limites</string>
+      </property>
+     </widget>
+    </item>
+    <item alignment="Qt::AlignmentFlag::AlignRight">
+     <widget class="QPushButton" name="btn_tela_historico">
+      <property name="text">
+       <string>Histórico</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
   </widget>
  </widget>
  <resources/>

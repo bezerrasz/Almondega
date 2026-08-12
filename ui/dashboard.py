@@ -23,7 +23,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(849, 399)
+        Dialog.resize(849, 449)
         self.layoutWidget = QWidget(Dialog)
         self.layoutWidget.setObjectName(u"layoutWidget")
         self.layoutWidget.setGeometry(QRect(10, 20, 295, 361))
@@ -214,12 +214,33 @@ class Ui_Dialog(object):
 
         self.widget_grafico = QWidget(Dialog)
         self.widget_grafico.setObjectName(u"widget_grafico")
-        self.widget_grafico.setGeometry(QRect(320, 20, 511, 361))
+        self.widget_grafico.setGeometry(QRect(320, 20, 511, 411))
         sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         sizePolicy1.setHorizontalStretch(0)
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.widget_grafico.sizePolicy().hasHeightForWidth())
         self.widget_grafico.setSizePolicy(sizePolicy1)
+        self.widget = QWidget(Dialog)
+        self.widget.setObjectName(u"widget")
+        self.widget.setGeometry(QRect(10, 400, 291, 28))
+        self.horizontalLayout_2 = QHBoxLayout(self.widget)
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
+        self.btn_tela_serial = QPushButton(self.widget)
+        self.btn_tela_serial.setObjectName(u"btn_tela_serial")
+
+        self.horizontalLayout_2.addWidget(self.btn_tela_serial, 0, Qt.AlignmentFlag.AlignLeft)
+
+        self.btn_config_limites = QPushButton(self.widget)
+        self.btn_config_limites.setObjectName(u"btn_config_limites")
+
+        self.horizontalLayout_2.addWidget(self.btn_config_limites, 0, Qt.AlignmentFlag.AlignHCenter)
+
+        self.btn_tela_historico = QPushButton(self.widget)
+        self.btn_tela_historico.setObjectName(u"btn_tela_historico")
+
+        self.horizontalLayout_2.addWidget(self.btn_tela_historico, 0, Qt.AlignmentFlag.AlignRight)
+
 
         self.retranslateUi(Dialog)
 
@@ -244,5 +265,8 @@ class Ui_Dialog(object):
         self.label_7.setText(QCoreApplication.translate("Dialog", u"1000", None))
         self.label_8.setText(QCoreApplication.translate("Dialog", u"2500", None))
         self.label_9.setText(QCoreApplication.translate("Dialog", u"4000", None))
+        self.btn_tela_serial.setText(QCoreApplication.translate("Dialog", u"Serial", None))
+        self.btn_config_limites.setText(QCoreApplication.translate("Dialog", u"Limites", None))
+        self.btn_tela_historico.setText(QCoreApplication.translate("Dialog", u"Hist\u00f3rico", None))
     # retranslateUi
 
