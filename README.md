@@ -4,7 +4,7 @@ Interface gráfica em Python (PySide6) para monitoramento de telemetria de uma S
 
 ## 👥 Equipe
 * Daniel Bezerra Freire - 411358
-* [Nome do Integrante 2] - [Matrícula]
+* Bruno Felipe Kuhnen - 414110
 * [Nome do Integrante 3] - [Matrícula]
 
 ## 🏗️ Estrutura do Projeto
