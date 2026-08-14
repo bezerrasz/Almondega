@@ -7,6 +7,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 import random
 from controller.config_controller import ConfigController
+from controller.serialport_controller import SerialPortController
 
 class DashboardController(QDialog):
     def __init__(self):
@@ -96,7 +97,8 @@ class DashboardController(QDialog):
 
     # Esqueletos para as próximas telas:
     def abrir_tela_serial(self):
-        print("Em breve: Aqui vai abrir a tela de Comunicação Serial!")
+        tela_serial = SerialPortController()
+        tela_serial.exec()
 
     def abrir_tela_historico(self):
         print("Em breve: Aqui vai abrir a tela de Histórico!")

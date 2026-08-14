@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SerialDialog</class>
+ <widget class="QDialog" name="SerialDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>541</width>
+    <height>342</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Comunicação Serial</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">/* Fundo escuro */
+QDialog {
+    background-color: #2b2b2b;
+}
+
+/* Rótulos de texto */
+QLabel {
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* Caixas de seleção e número */
+QComboBox, QSpinBox {
+    background-color: #1e1e1e;
+    color: #ffffff;
+    padding: 5px;
+    border-radius: 4px;
+}
+
+QComboBox:focus, QSpinBox:focus {
+    background-color: #3a3a3a;
+}
+
+/* Botões */
+QPushButton {
+    background-color: #008cba;
+    color: white;
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background-color: #005f73;
+}
+
+QPushButton:disabled {
+    background-color: #555555;
+    color: #888888;
+}</string>
+  </property>
+  <widget class="QLabel" name="lbl_titulo">
+   <property name="geometry">
+    <rect>
+     <x>70</x>
+     <y>20</y>
+     <width>391</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Sitka</family>
+     <pointsize>-1</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Configuração de Comunicação Serial</string>
+   </property>
+   <property name="textFormat">
+    <enum>Qt::TextFormat::AutoText</enum>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignmentFlag::AlignCenter</set>
+   </property>
+   <property name="wordWrap">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="lbl_status">
+   <property name="geometry">
+    <rect>
+     <x>370</x>
+     <y>140</y>
+     <width>141</width>
+     <height>71</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel {
+    background-color: #ff0000;
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 13px;
+    border-radius: 15px;
+    padding: 8px 15px;
+}</string>
+   </property>
+   <property name="text">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;DESCONECTADO&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignmentFlag::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QWidget" name="layoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>100</y>
+     <width>251</width>
+     <height>141</height>
+    </rect>
+   </property>
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0">
+     <widget class="QLabel" name="lbl_com">
+      <property name="font">
+       <font>
+        <family>Yu Gothic UI</family>
+        <pointsize>-1</pointsize>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Porta COM:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="1">
+     <widget class="QComboBox" name="combo_porta"/>
+    </item>
+    <item row="1" column="0">
+     <widget class="QLabel" name="lbl_baudrate">
+      <property name="font">
+       <font>
+        <family>Yu Gothic UI</family>
+        <pointsize>-1</pointsize>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Baud Rate:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="1">
+     <widget class="QComboBox" name="combo_br"/>
+    </item>
+    <item row="2" column="0">
+     <widget class="QLabel" name="lbl_timeout">
+      <property name="font">
+       <font>
+        <family>Yu Gothic UI</family>
+        <pointsize>-1</pointsize>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Timeout (s):</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="1">
+     <widget class="QSpinBox" name="spin_timeout">
+      <property name="minimumSize">
+       <size>
+        <width>80</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QSpinBox {
+    padding-right: 20px; /* Cria uma margem de proteção para o texto não encostar nas setas */
+}</string>
+      </property>
+      <property name="minimum">
+       <number>1</number>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="layoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>100</x>
+     <y>260</y>
+     <width>341</width>
+     <height>71</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <widget class="QPushButton" name="btn_conectar">
+      <property name="text">
+       <string>CONECTAR</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="btn_desconectar">
+      <property name="text">
+       <string>DESCONECTAR</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
