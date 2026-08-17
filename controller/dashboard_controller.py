@@ -56,6 +56,8 @@ class DashboardController(QDialog):
         self.ui.btn_tela_historico.clicked.connect(self.abrir_tela_historico)
 
     # TELA 1
+
+    #ATUALIZAO VALORES DE TENSAO E CORRENTE E CALCULO DE POTENCIA
     def atualizar_indicadores(self):
         v = self.model.tensao_atual
         i = self.model.corrente_atual
@@ -66,6 +68,7 @@ class DashboardController(QDialog):
         self.ui.lbl_corrente.setText(f"{i:.1f} A")
         self.ui.lbl_potencia.setText(f"{p:.1f} W")
 
+    # ATIVACAO BOTAO DE EMERGENCIA
     def acionar_emergencia(self):
         self.ui.chk_simulador.setChecked(False)
         self.ui.lbl_status_disjuntor.setText("ABERTO")
@@ -76,12 +79,14 @@ class DashboardController(QDialog):
 
         self.model.registrar_log("EMERGÊNCIA", "Botão de PARADA acionado pelo operador!")
 
+    # SIMULA UMA ALAVANCA DE LIGA E DESLIGA DO SISTEMA
     def mudar_estado_alavanca(self, estado):
             if estado == True:
                 self.model.registrar_log("OPERAÇÃO", "Alavanca acionada: Sistema LIGADO.")
             else:
                 self.model.registrar_log("OPERAÇÃO", "Alavanca recuada: Sistema DESLIGADO.")
 
+    # GRAFICO COM VALORES SIMULADOS 
     def preparar_grafico_realtime(self):
         self.fig, self.ax = plt.subplots()
         self.canvas = FigureCanvas(self.fig)
@@ -130,6 +135,7 @@ class DashboardController(QDialog):
         
         self.canvas.draw()
 
+    # BOLINHA PARA LIMITE DE VALORES QUE ACOMPANHA O MOUSE
     def mostrar_valor_bolinha(self, valor):
         posicao_mouse = QCursor.pos()
         
@@ -137,6 +143,7 @@ class DashboardController(QDialog):
        
         self.limite_potencia = valor
 
+    # FAZER UMA SIMULACAO DE UM LED FUNCIONANDO
     def atualizar_status_led(self, ligado):
         if ligado:
             self.ui.lbl_status_disjuntor.setText("FECHADO")
