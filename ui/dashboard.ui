@@ -217,7 +217,7 @@ border-radius: 5px;</string>
        </widget>
       </item>
       <item row="2" column="0" alignment="Qt::AlignmentFlag::AlignHCenter">
-       <widget class="QPushButton" name="btn_emergencia">
+       <widget class="QPushButton" name="btn_parar">
         <property name="minimumSize">
          <size>
           <width>60</width>
@@ -346,7 +346,7 @@ QPushButton:pressed {
     </sizepolicy>
    </property>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>10</x>

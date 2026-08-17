@@ -1,15 +1,17 @@
-from PySide6.QtWidgets import QDialog, QMessageBox
-from ui.serialport import Ui_SerialDialog
 from PySide6.QtWidgets import QDialog, QMessageBox, QVBoxLayout, QToolTip
 from PySide6.QtGui import QCursor
-from PySide6.QtWidgets import QVBoxLayout
-
+from PySide6.QtCore import Signal 
+from ui.serialport import Ui_SerialDialog
 
 class SerialPortController(QDialog):
+    
+    enviar_log = Signal(str, str) 
+
     def __init__(self):
         super().__init__()
         self.ui = Ui_SerialDialog()
         self.ui.setupUi(self)
+        self.setWindowTitle("🔌 Conexão Serial")
 
         self.ui.combo_porta.addItems(["COM1", "COM2", "COM3", "COM4"])
         self.ui.combo_br.addItems(["9600", "19200", "38400", "57600", "115200"])
@@ -24,7 +26,13 @@ class SerialPortController(QDialog):
         self.ui.lbl_status.setStyleSheet(
             "background-color: green; color: white; font-weight: bold; border-radius: 20px; qproperty-alignment: AlignCenter;"
         )
-        QMessageBox.information(self, "Dispositivo Conectado", "{} conectado com sucesso!".format(self.ui.combo_porta.currentText()))
+        
+        porta = self.ui.combo_porta.currentText()
+        baud = self.ui.combo_br.currentText()
+        
+        self.enviar_log.emit("SERIAL", f"Conectado com sucesso à {porta} (Baud: {baud})")
+        
+        QMessageBox.information(self, "Dispositivo Conectado", f"{porta} conectado com sucesso!")
         
 
     def desconectar(self):
@@ -34,8 +42,9 @@ class SerialPortController(QDialog):
         self.ui.lbl_status.setStyleSheet(
             "background-color: red; color: white; font-weight: bold; border-radius: 20px; qproperty-alignment: AlignCenter;"
         )
-        QMessageBox.information(self, "Dispositivo Desconectado", "{} desconectado com sucesso!".format(self.ui.combo_porta.currentText()))
-
         
-
+        porta = self.ui.combo_porta.currentText()
         
+        self.enviar_log.emit("SERIAL", f"Conexão encerrada com a {porta}")
+        
+        QMessageBox.information(self, "Dispositivo Desconectado", f"{porta} desconectado com sucesso!")

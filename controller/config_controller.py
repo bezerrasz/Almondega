@@ -6,6 +6,7 @@ class ConfigController(QDialog):
         super().__init__()
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
+        self.setWindowTitle("⚙️ Configurar Limites (Setpoints)")
         
         self.limite_tensao = 0
         self.limite_corrente = 0.0

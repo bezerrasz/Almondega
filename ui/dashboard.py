@@ -140,12 +140,12 @@ class Ui_Dialog(object):
 
         self.gridLayout.addWidget(self.label_4, 0, 1, 1, 1)
 
-        self.btn_emergencia = QPushButton(self.layoutWidget)
-        self.btn_emergencia.setObjectName(u"btn_emergencia")
-        self.btn_emergencia.setMinimumSize(QSize(60, 60))
-        self.btn_emergencia.setMaximumSize(QSize(60, 60))
-        self.btn_emergencia.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
-        self.btn_emergencia.setStyleSheet(u"QPushButton {\n"
+        self.btn_parar = QPushButton(self.layoutWidget)
+        self.btn_parar.setObjectName(u"btn_parar")
+        self.btn_parar.setMinimumSize(QSize(60, 60))
+        self.btn_parar.setMaximumSize(QSize(60, 60))
+        self.btn_parar.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
+        self.btn_parar.setStyleSheet(u"QPushButton {\n"
 "    background-color: #e74c3c;\n"
 "    color: white;\n"
 "    font-weight: bold;\n"
@@ -162,9 +162,9 @@ class Ui_Dialog(object):
 "    background-color: #781f16;\n"
 "    border: 4px solid #4a110a;\n"
 "}")
-        self.btn_emergencia.setAutoDefault(False)
+        self.btn_parar.setAutoDefault(False)
 
-        self.gridLayout.addWidget(self.btn_emergencia, 2, 0, 1, 1, Qt.AlignmentFlag.AlignHCenter)
+        self.gridLayout.addWidget(self.btn_parar, 2, 0, 1, 1, Qt.AlignmentFlag.AlignHCenter)
 
         self.lbl_potencia_2 = QLabel(self.layoutWidget)
         self.lbl_potencia_2.setObjectName(u"lbl_potencia_2")
@@ -220,23 +220,23 @@ class Ui_Dialog(object):
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.widget_grafico.sizePolicy().hasHeightForWidth())
         self.widget_grafico.setSizePolicy(sizePolicy1)
-        self.widget = QWidget(Dialog)
-        self.widget.setObjectName(u"widget")
-        self.widget.setGeometry(QRect(10, 400, 291, 28))
-        self.horizontalLayout_2 = QHBoxLayout(self.widget)
+        self.layoutWidget1 = QWidget(Dialog)
+        self.layoutWidget1.setObjectName(u"layoutWidget1")
+        self.layoutWidget1.setGeometry(QRect(10, 400, 291, 28))
+        self.horizontalLayout_2 = QHBoxLayout(self.layoutWidget1)
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
-        self.btn_tela_serial = QPushButton(self.widget)
+        self.btn_tela_serial = QPushButton(self.layoutWidget1)
         self.btn_tela_serial.setObjectName(u"btn_tela_serial")
 
         self.horizontalLayout_2.addWidget(self.btn_tela_serial, 0, Qt.AlignmentFlag.AlignLeft)
 
-        self.btn_config_limites = QPushButton(self.widget)
+        self.btn_config_limites = QPushButton(self.layoutWidget1)
         self.btn_config_limites.setObjectName(u"btn_config_limites")
 
         self.horizontalLayout_2.addWidget(self.btn_config_limites, 0, Qt.AlignmentFlag.AlignHCenter)
 
-        self.btn_tela_historico = QPushButton(self.widget)
+        self.btn_tela_historico = QPushButton(self.layoutWidget1)
         self.btn_tela_historico.setObjectName(u"btn_tela_historico")
 
         self.horizontalLayout_2.addWidget(self.btn_tela_historico, 0, Qt.AlignmentFlag.AlignRight)
@@ -260,7 +260,7 @@ class Ui_Dialog(object):
         self.label_5.setText(QCoreApplication.translate("Dialog", u"Bot\u00e3o Emergencial", None))
         self.chk_simulador.setText(QCoreApplication.translate("Dialog", u"Alavanca Virtual", None))
         self.label_4.setText(QCoreApplication.translate("Dialog", u"Status", None))
-        self.btn_emergencia.setText(QCoreApplication.translate("Dialog", u"PARAR", None))
+        self.btn_parar.setText(QCoreApplication.translate("Dialog", u"PARAR", None))
         self.lbl_potencia_2.setText(QCoreApplication.translate("Dialog", u"Limite de Alerta", None))
         self.label_7.setText(QCoreApplication.translate("Dialog", u"1000", None))
         self.label_8.setText(QCoreApplication.translate("Dialog", u"2500", None))
