@@ -45,6 +45,9 @@ class DashboardController(QDialog):
         self.timer_grafico.start(1000)
 
         # BOLINHA DE LIMITE
+        valor_maximo_slider = self.ui.slider_limite.maximum()
+        self.ui.slider_limite.setValue(valor_maximo_slider)
+        self.limite_potencia = valor_maximo_slider
         self.ui.slider_limite.valueChanged.connect(self.mostrar_valor_bolinha)
 
         # LED DE STATUS
@@ -124,6 +127,12 @@ class DashboardController(QDialog):
 
         self.atualizar_indicadores()
         nova_potencia = self.model.calcular_potencia()
+
+        if self.limite_potencia > 0 and nova_potencia > self.limite_potencia:
+            texto_alerta = f"PICO DE CONSUMO: Potência {nova_potencia:.1f}W excedeu o limite do Slider ({self.limite_potencia}W)!"
+            self.model.registrar_log("ALERTA DE CONSUMO", texto_alerta)
+            self.ui.chk_simulador.setChecked(False)
+            self.acionar_emergencia()
         
         self.tempo_x.append(self.tempo_atual)
         self.potencia_y.append(nova_potencia)
