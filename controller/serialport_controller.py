@@ -14,7 +14,14 @@ class SerialPortController(QDialog):
         self.setWindowTitle("🔌 Conexão Serial")
 
         self.ui.combo_porta.addItems(["COM1", "COM2", "COM3", "COM4"])
+        self.ui.combo_porta.setStyleSheet(
+            "background-color: black; color: white; font-weight: regular; border-radius: 20px; qproperty-alignment: AlignCenter;"
+        )
+        
         self.ui.combo_br.addItems(["9600", "19200", "38400", "57600", "115200"])
+        self.ui.combo_br.setStyleSheet(
+            "background-color: black; color: white; font-weight: regular; border-radius: 20px; qproperty-alignment: AlignCenter;"
+        )
 
         self.ui.btn_conectar.clicked.connect(self.conectar)
         self.ui.btn_desconectar.clicked.connect(self.desconectar)
@@ -32,7 +39,7 @@ class SerialPortController(QDialog):
         
         self.enviar_log.emit("SERIAL", f"Conectado com sucesso à {porta} (Baud: {baud})")
         
-        QMessageBox.information(self, "Dispositivo Conectado", f"{porta} conectado com sucesso!")
+        QMessageBox.information(self, "Dispositivo Conectado", "{} conectado com sucesso!".format(self.ui.combo_porta.currentText()))
         
 
     def desconectar(self):
@@ -47,4 +54,4 @@ class SerialPortController(QDialog):
         
         self.enviar_log.emit("SERIAL", f"Conexão encerrada com a {porta}")
         
-        QMessageBox.information(self, "Dispositivo Desconectado", f"{porta} desconectado com sucesso!")
+        QMessageBox.information(self, "Dispositivo Desconectado", "{} desconectado com sucesso!".format(self.ui.combo_porta.currentText()))
