@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'dashboard.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.11.1
+## Created by: Qt User Interface Compiler version 6.12.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -24,6 +24,15 @@ class Ui_Dialog(object):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
         Dialog.resize(849, 449)
+        Dialog.setStyleSheet(u"/* Fundo Escuro  Letras brancas*/\n"
+"QDialog {\n"
+"    background-color: #2b2b2b;\n"
+"	color: #ffffff;\n"
+"}\n"
+"\n"
+"QLabel, QCheckBox {\n"
+"    color: #ffffff;\n"
+"}")
         self.layoutWidget = QWidget(Dialog)
         self.layoutWidget.setObjectName(u"layoutWidget")
         self.layoutWidget.setGeometry(QRect(10, 20, 295, 361))

@@ -2,6 +2,8 @@ from PySide6.QtWidgets import QDialog, QMessageBox, QVBoxLayout, QToolTip
 from PySide6.QtGui import QCursor
 from PySide6.QtCore import Signal 
 from ui.serialport import Ui_SerialDialog
+import os
+import json
 
 class SerialPortController(QDialog):
     
@@ -25,6 +27,7 @@ class SerialPortController(QDialog):
 
         self.ui.btn_conectar.clicked.connect(self.conectar)
         self.ui.btn_desconectar.clicked.connect(self.desconectar)
+        
 
     def conectar(self):
         self.ui.combo_porta.setEnabled(False)
