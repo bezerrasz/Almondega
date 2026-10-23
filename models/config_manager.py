@@ -32,4 +32,4 @@ class ConfigManager:
     def salvar(self, config_data : dict):
         "Salvar as configurações no arquivo JSON"
         with open(self.filename, "w", encoding = "utf-8") as f:
-            json.dump(config_data, f, ident=4, ensure_ascii=False)
+            json.dump(config_data, f, indent=4, ensure_ascii=False)

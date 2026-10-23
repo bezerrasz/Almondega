@@ -1,0 +1,6 @@
+{
+    "porta_serial": "COM1",
+    "baud_rate": 9600,
+    "limite_tensao": 220.0,
+    "limite_corrente": 30.0
+}
