@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import QDialog, QMessageBox, QVBoxLayout, QToolTip
 from PySide6.QtGui import QCursor
 from PySide6.QtCore import Signal 
+from models import config_manager
 from ui.serialport import Ui_SerialDialog
 import os
 import json
@@ -27,7 +28,14 @@ class SerialPortController(QDialog):
 
         self.ui.btn_conectar.clicked.connect(self.conectar)
         self.ui.btn_desconectar.clicked.connect(self.desconectar)
-        
+
+    # cONFIGURAÇÃO INICIAL DA PORTA SERIAL COM BASE NO ARQUIVO DE CONFIGURAÇÃO jSON 
+        cfg = config_manager.ConfigManager()
+
+        self.ui.combo_porta.setCurrentText(cfg.carregar().get("porta_serial"))
+        self.ui.combo_br.setCurrentText(str(cfg.carregar().get("baud_rate")))
+
+
 
     def conectar(self):
         self.ui.combo_porta.setEnabled(False)
@@ -38,7 +46,7 @@ class SerialPortController(QDialog):
         )
         
         porta = self.ui.combo_porta.currentText()
-        baud = self.ui.combo_br.currentText()
+        baud = int(self.ui.combo_br.currentText())
         
         self.enviar_log.emit("SERIAL", f"Conectado com sucesso à {porta} (Baud: {baud})")
         
