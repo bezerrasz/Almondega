@@ -30,11 +30,22 @@ class SerialPortController(QDialog):
         self.ui.btn_desconectar.clicked.connect(self.desconectar)
 
     # cONFIGURAÇÃO INICIAL DA PORTA SERIAL COM BASE NO ARQUIVO DE CONFIGURAÇÃO jSON 
-        cfg = config_manager.ConfigManager()
+        self.cfg = config_manager.ConfigManager()
 
-        self.ui.combo_porta.setCurrentText(cfg.carregar().get("porta_serial"))
-        self.ui.combo_br.setCurrentText(str(cfg.carregar().get("baud_rate")))
+        self.ui.combo_porta.setCurrentText(self.cfg.carregar().get("porta_serial"))
+        self.ui.combo_br.setCurrentText(str(self.cfg.carregar().get("baud_rate")))
 
+        self.ui.combo_porta.currentIndexChanged.connect(self.autosave_config)
+        self.ui.combo_br.currentIndexChanged.connect(self.autosave_config)
+
+    def autosave_config(self):
+        #Auto save para as configurações deixadas pelo usuário na conexão serial
+
+        dados = self.cfg.carregar()
+        dados["porta_serial"] = self.ui.combo_porta.currentText()
+        dados["baud_rate"] = int(self.ui.combo_br.currentText())
+
+        self.cfg.salvar(dados)
 
 
     def conectar(self):
