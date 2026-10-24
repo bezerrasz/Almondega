@@ -35,11 +35,14 @@ class SerialPortController(QDialog):
         self.ui.combo_porta.setCurrentText(self.cfg.carregar().get("porta_serial"))
         self.ui.combo_br.setCurrentText(str(self.cfg.carregar().get("baud_rate")))
 
+        #Nas duas linhas abaixo, o sinal de mudança das comboxes é conectado a função de autosave_config, 
+        # que salva automaticamente as configurações de porta serial e baud rate no arquivo JSON sempre que o usuário altera essas opções na interface gráfica.
+
         self.ui.combo_porta.currentIndexChanged.connect(self.autosave_config)
         self.ui.combo_br.currentIndexChanged.connect(self.autosave_config)
 
     def autosave_config(self):
-        #Auto save para as configurações deixadas pelo usuário na conexão serial
+        #Função de salvamento automático para as configurações deixadas pelo usuário na conexão serial
 
         dados = self.cfg.carregar()
         dados["porta_serial"] = self.ui.combo_porta.currentText()
