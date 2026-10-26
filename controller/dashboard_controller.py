@@ -1,18 +1,18 @@
-from PySide6.QtWidgets import QDialog, QMessageBox
-from ui.dashboard import Ui_Dialog
+import random
+from collections import deque
+import matplotlib.pyplot as plt
+
 from PySide6.QtWidgets import QDialog, QMessageBox, QVBoxLayout, QToolTip
 from PySide6.QtGui import QCursor
-from PySide6.QtWidgets import QVBoxLayout
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-import matplotlib.pyplot as plt
-import random
-import datetime
 from PySide6.QtCore import QTimer
-from collections import deque
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+
+from ui.dashboard import Ui_Dialog
 from controller.config_controller import ConfigController
 from controller.serialport_controller import SerialPortController
 from controller.historico_controller import HistoricoController
 from models.sistema_model import SistemaModel
+from models.repository import EventoRepository
 
 class DashboardController(QDialog):
     def __init__(self):
@@ -78,9 +78,20 @@ class DashboardController(QDialog):
         self.ui.lbl_status_disjuntor.setStyleSheet(
             "background-color: red; color: white; font-weight: bold; border-radius: 20px; qproperty-alignment: AlignCenter;"
         )
-        QMessageBox.warning(self, "Alerta", "Corte emergencial acionado!")
 
-        self.model.registrar_log("EMERGÊNCIA", "Botão de PARADA acionado pelo operador!")
+        try:
+            EventoRepository.executar_corte_emergencial(
+                tipo_evento="EMERGÊNCIA",
+                mensagem="Botão de PARADA acionado pelo operador!",
+                valor_medido=self.model.corrente_atual,
+                simular_falha=False 
+            )
+            QMessageBox.warning(self, "Alerta", "Corte emergencial acionado com sucesso e salvo no banco!")
+            self.model.registrar_log("EMERGÊNCIA", "Corte concluído e persistido via ACID.")
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Falha Transacional", f"Ocorreu um erro crítico! ROLLBACK executado no banco.\nMotivo: {str(e)}")
+            self.model.registrar_log("ERROR", f"Falha na operação de corte emergencial. Rollback executado: {str(e)}")
 
     # SIMULA UMA ALAVANCA DE LIGA E DESLIGA DO SISTEMA
     def mudar_estado_alavanca(self, estado):
@@ -188,7 +199,7 @@ class DashboardController(QDialog):
 
     # TELA 4
     def abrir_tela_historico(self):
-        tela_logs = HistoricoController(self.model.lista_logs) 
+        tela_logs = HistoricoController()   
         tela_logs.exec()
 
     

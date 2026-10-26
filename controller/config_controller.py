@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import QDialog
 from ui.config_limites import Ui_Dialog
+from PySide6.QtWidgets import QMessageBox
 from models import config_manager
 import json
 import os
@@ -23,11 +24,30 @@ class ConfigController(QDialog):
         self.ui.btn_salvar.clicked.connect(self.salvar_e_fechar)
         
     def salvar_e_fechar(self):
-    # Salvar os limites atualizados no arquivo de configuração JSON
-        dados = self.cfg.carregar()
+        str_tensao = self.ui.spin_limite_tensao.text().replace(',', '.')
+        str_corrente = self.ui.spin_limite_corrente.text().replace(',', '.')
+        
+        # VALIDAÇÃO A: Campo Vazio
+        if not str_tensao.strip() or not str_corrente.strip():
+            QMessageBox.warning(self, "Erro de Validação", "Nenhum dos limites pode ficar vazio!")
+            return
+            
+        try:
+            val_tensao = float(str_tensao)
+            val_corrente = float(str_corrente)
+            
+            # VALIDAÇÃO B: Números negativos ou Zero
+            if val_tensao <= 0 or val_corrente <= 0:
+                QMessageBox.warning(self, "Erro de Validação", "Os limites devem ser valores maiores que zero!")
+                return
+                
+            dados = self.cfg.carregar()
+            dados["limite_tensao"] = val_tensao
+            dados["limite_corrente"] = val_corrente
+            self.cfg.salvar(dados)
 
-        dados["limite_tensao"] = self.ui.spin_limite_tensao.value()
-        dados["limite_corrente"] = self.ui.spin_limite_corrente.value()
-        self.cfg.salvar(dados)
-
-        self.accept() 
+            self.accept() 
+            
+        except ValueError:
+            # VALIDAÇÃO C: Usuário tentou colocar letras em campos matemáticos
+            QMessageBox.warning(self, "Erro de Validação", "Por favor, insira apenas caracteres numéricos válidos!")
