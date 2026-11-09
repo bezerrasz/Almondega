@@ -1,395 +1,203 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Dialog</class>
- <widget class="QDialog" name="Dialog">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
   <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>849</width>
-    <height>449</height>
-   </rect>
+   <rect><x>0</x><y>0</y><width>1240</width><height>780</height></rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Smart Grid - Supervisório</string>
   </property>
-  <property name="styleSheet">
-   <string notr="true">/* Fundo Escuro  Letras brancas*/
-QDialog {
-    background-color: #2b2b2b;
-	color: #ffffff;
-}
-
-QLabel, QCheckBox {
-    color: #ffffff;
-}</string>
-  </property>
-  <widget class="QWidget" name="layoutWidget">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>20</y>
-     <width>295</width>
-     <height>361</height>
-    </rect>
-   </property>
-   <layout class="QVBoxLayout" name="verticalLayout_2">
-    <property name="spacing">
-     <number>15</number>
-    </property>
+  <widget class="QWidget" name="central">
+   <layout class="QHBoxLayout" name="layout_principal" stretch="0,1">
+    <property name="spacing"><number>12</number></property>
     <item>
-     <widget class="QLabel" name="label_6">
-      <property name="font">
-       <font>
-        <family>Rockwell Extra Bold</family>
-        <pointsize>28</pointsize>
-        <bold>true</bold>
-       </font>
-      </property>
-      <property name="text">
-       <string>DASHBOARD</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignmentFlag::AlignCenter</set>
-      </property>
+     <widget class="QWidget" name="painel_esquerdo" native="true">
+      <property name="minimumSize"><size><width>320</width><height>0</height></size></property>
+      <property name="maximumSize"><size><width>340</width><height>16777215</height></size></property>
+      <layout class="QVBoxLayout" name="layout_esquerdo">
+       <property name="leftMargin"><number>0</number></property>
+       <property name="topMargin"><number>0</number></property>
+       <property name="rightMargin"><number>0</number></property>
+       <property name="bottomMargin"><number>0</number></property>
+       <item>
+        <widget class="QLabel" name="lbl_titulo">
+         <property name="objectName"><string>lbl_titulo</string></property>
+         <property name="text"><string>⚡ SMART GRID</string></property>
+         <property name="alignment"><set>Qt::AlignmentFlag::AlignCenter</set></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="grp_conexao">
+         <property name="title"><string>Conexão serial</string></property>
+         <layout class="QGridLayout" name="grid_conexao">
+          <item row="0" column="0">
+           <widget class="QLabel" name="lbl_porta"><property name="text"><string>Porta</string></property></widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="combo_porta">
+            <property name="editable"><bool>true</bool></property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QToolButton" name="btn_atualizar_portas">
+            <property name="toolTip"><string>Atualizar lista de portas</string></property>
+            <property name="text"><string>⟳</string></property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="lbl_baud"><property name="text"><string>Velocidade alvo</string></property></widget>
+          </item>
+          <item row="1" column="1" colspan="2">
+           <widget class="QComboBox" name="combo_baud"/>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="lbl_periodo"><property name="text"><string>Amostragem</string></property></widget>
+          </item>
+          <item row="2" column="1" colspan="2">
+           <widget class="QSpinBox" name="spin_periodo">
+            <property name="suffix"><string> ms</string></property>
+            <property name="minimum"><number>200</number></property>
+            <property name="maximum"><number>5000</number></property>
+            <property name="singleStep"><number>100</number></property>
+            <property name="value"><number>1000</number></property>
+           </widget>
+          </item>
+          <item row="3" column="0" colspan="3">
+           <layout class="QHBoxLayout" name="layout_botoes_conexao">
+            <item>
+             <widget class="QPushButton" name="btn_conectar"><property name="text"><string>Conectar</string></property></widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btn_desconectar"><property name="text"><string>Desconectar</string></property></widget>
+            </item>
+           </layout>
+          </item>
+          <item row="4" column="0" colspan="3">
+           <widget class="QLabel" name="lbl_status_conexao">
+            <property name="text"><string>DESCONECTADO</string></property>
+            <property name="alignment"><set>Qt::AlignmentFlag::AlignCenter</set></property>
+           </widget>
+          </item>
+          <item row="5" column="0" colspan="3">
+           <widget class="QLabel" name="lbl_detalhe_conexao">
+            <property name="text"><string>-</string></property>
+            <property name="wordWrap"><bool>true</bool></property>
+           </widget>
+          </item>
+          <item row="6" column="0" colspan="3">
+           <widget class="QLabel" name="lbl_estatisticas">
+            <property name="text"><string>Pacotes: 0 ok · 0 inválidos · 0 perdidos</string></property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="grp_medicoes">
+         <property name="title"><string>Medições</string></property>
+         <layout class="QFormLayout" name="form_medicoes">
+          <item row="0" column="0"><widget class="QLabel" name="lbl_t_tensao"><property name="text"><string>Tensão</string></property></widget></item>
+          <item row="0" column="1"><widget class="QLabel" name="lbl_tensao"><property name="text"><string>--- V</string></property></widget></item>
+          <item row="1" column="0"><widget class="QLabel" name="lbl_t_corrente"><property name="text"><string>Corrente</string></property></widget></item>
+          <item row="1" column="1"><widget class="QLabel" name="lbl_corrente"><property name="text"><string>--- A</string></property></widget></item>
+          <item row="2" column="0"><widget class="QLabel" name="lbl_t_potencia"><property name="text"><string>Potência ativa</string></property></widget></item>
+          <item row="2" column="1"><widget class="QLabel" name="lbl_potencia"><property name="text"><string>--- W</string></property></widget></item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="grp_disjuntor">
+         <property name="title"><string>Disjuntor DJ-PRINCIPAL</string></property>
+         <layout class="QVBoxLayout" name="layout_disjuntor">
+          <item>
+           <widget class="QLabel" name="lbl_status_disjuntor">
+            <property name="text"><string>DESCONHECIDO</string></property>
+            <property name="alignment"><set>Qt::AlignmentFlag::AlignCenter</set></property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="layout_botoes_dj">
+            <item><widget class="QPushButton" name="btn_fechar_dj"><property name="text"><string>Fechar (ligar)</string></property></widget></item>
+            <item><widget class="QPushButton" name="btn_abrir_dj"><property name="text"><string>Abrir (desligar)</string></property></widget></item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btn_emergencia"><property name="text"><string>⛔ CORTE EMERGENCIAL</string></property></widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="layout_telas">
+         <item><widget class="QPushButton" name="btn_config_limites"><property name="text"><string>⚙ Limites</string></property></widget></item>
+         <item><widget class="QPushButton" name="btn_eventos"><property name="text"><string>📋 Eventos</string></property></widget></item>
+        </layout>
+       </item>
+       <item>
+        <spacer name="espaco_esquerdo">
+         <property name="orientation"><enum>Qt::Orientation::Vertical</enum></property>
+         <property name="sizeHint" stdset="0"><size><width>20</width><height>10</height></size></property>
+        </spacer>
+       </item>
+      </layout>
      </widget>
     </item>
     <item>
-     <layout class="QFormLayout" name="formLayout">
-      <property name="labelAlignment">
-       <set>Qt::AlignmentFlag::AlignCenter</set>
-      </property>
-      <property name="formAlignment">
-       <set>Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignTop</set>
-      </property>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label">
-        <property name="font">
-         <font>
-          <pointsize>12</pointsize>
-          <bold>true</bold>
-         </font>
-        </property>
-        <property name="text">
-         <string>Tensão (V):</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QLabel" name="lbl_tensao">
-        <property name="font">
-         <font>
-          <pointsize>13</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>Tensão (V):</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_2">
-        <property name="font">
-         <font>
-          <pointsize>11</pointsize>
-          <bold>true</bold>
-         </font>
-        </property>
-        <property name="text">
-         <string>Corrente (A):</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QLabel" name="lbl_corrente">
-        <property name="font">
-         <font>
-          <pointsize>13</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>Tensão (V):</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_3">
-        <property name="font">
-         <font>
-          <pointsize>11</pointsize>
-          <bold>true</bold>
-         </font>
-        </property>
-        <property name="text">
-         <string>Potência (W):</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QLabel" name="lbl_potencia">
-        <property name="font">
-         <font>
-          <pointsize>13</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>Tensão (V):</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
-    <item>
-     <layout class="QGridLayout" name="gridLayout">
-      <item row="2" column="1">
-       <widget class="QLabel" name="lbl_status_disjuntor">
-        <property name="styleSheet">
-         <string notr="true">background-color: green;
-color: white;
-font-weight: bold;
-font-size: 14px;
-padding: 5px;
-border-radius: 5px;</string>
-        </property>
-        <property name="text">
-         <string>FECHADO</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_5">
-        <property name="font">
-         <font>
-          <pointsize>11</pointsize>
-          <bold>true</bold>
-         </font>
-        </property>
-        <property name="text">
-         <string>Botão Emergencial</string>
-        </property>
-       </widget>
-      </item>
-      <item row="9" column="1" alignment="Qt::AlignmentFlag::AlignHCenter">
-       <widget class="QCheckBox" name="chk_simulador">
-        <property name="font">
-         <font>
-          <bold>true</bold>
-         </font>
-        </property>
-        <property name="text">
-         <string>Alavanca Virtual</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QLabel" name="label_4">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>12</pointsize>
-          <bold>true</bold>
-         </font>
-        </property>
-        <property name="layoutDirection">
-         <enum>Qt::LayoutDirection::LeftToRight</enum>
-        </property>
-        <property name="text">
-         <string>Status</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0" alignment="Qt::AlignmentFlag::AlignHCenter">
-       <widget class="QPushButton" name="btn_parar">
-        <property name="minimumSize">
-         <size>
-          <width>60</width>
-          <height>60</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>60</width>
-          <height>60</height>
-         </size>
-        </property>
-        <property name="layoutDirection">
-         <enum>Qt::LayoutDirection::LeftToRight</enum>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">QPushButton {
-    background-color: #e74c3c;
-    color: white;
-    font-weight: bold;
-    font-size: 12px;
-    border-radius: 30px; 
-    border: 4px solid #c0392b;
-}
-
-QPushButton:hover {
-    background-color: #c0392b;
-}
-
-QPushButton:pressed {
-    background-color: #781f16;
-    border: 4px solid #4a110a;
-}</string>
-        </property>
-        <property name="text">
-         <string>PARAR</string>
-        </property>
-        <property name="autoDefault">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="9" column="0">
-       <widget class="QLabel" name="lbl_potencia_2">
-        <property name="font">
-         <font>
-          <bold>true</bold>
-         </font>
-        </property>
-        <property name="text">
-         <string>Limite de Alerta</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
-    <item>
-     <layout class="QVBoxLayout" name="verticalLayout">
+     <layout class="QVBoxLayout" name="layout_direito" stretch="0,0,1,0">
       <item>
-       <widget class="QSlider" name="slider_limite">
-        <property name="minimum">
-         <number>1000</number>
-        </property>
-        <property name="maximum">
-         <number>4000</number>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Orientation::Horizontal</enum>
-        </property>
-        <property name="tickPosition">
-         <enum>QSlider::TickPosition::TicksBelow</enum>
-        </property>
-        <property name="tickInterval">
-         <number>500</number>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout">
+       <layout class="QHBoxLayout" name="layout_modo">
+        <item><widget class="QLabel" name="lbl_modo"><property name="text"><string>Modo do gráfico:</string></property></widget></item>
+        <item><widget class="QRadioButton" name="radio_tempo_real"><property name="text"><string>Tempo real</string></property><property name="checked"><bool>true</bool></property></widget></item>
+        <item><widget class="QRadioButton" name="radio_historico"><property name="text"><string>Consulta de histórico</string></property></widget></item>
         <item>
-         <widget class="QLabel" name="label_7">
-          <property name="text">
-           <string>1000</string>
-          </property>
-         </widget>
+         <spacer name="espaco_modo">
+          <property name="orientation"><enum>Qt::Orientation::Horizontal</enum></property>
+          <property name="sizeHint" stdset="0"><size><width>40</width><height>20</height></size></property>
+         </spacer>
         </item>
-        <item>
-         <widget class="QLabel" name="label_8">
-          <property name="text">
-           <string>2500</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignmentFlag::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="label_9">
-          <property name="text">
-           <string>4000</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
+        <item><widget class="QLabel" name="lbl_grandeza"><property name="text"><string>Grandeza:</string></property></widget></item>
+        <item><widget class="QComboBox" name="combo_grandeza"/></item>
        </layout>
       </item>
+      <item>
+       <widget class="QGroupBox" name="grp_filtro">
+        <property name="title"><string>Filtro do histórico (SQLite)</string></property>
+        <layout class="QHBoxLayout" name="layout_filtro">
+         <item><widget class="QRadioButton" name="radio_ultimas"><property name="text"><string>Últimas</string></property><property name="checked"><bool>true</bool></property></widget></item>
+         <item>
+          <widget class="QSpinBox" name="spin_ultimas">
+           <property name="suffix"><string> leituras</string></property>
+           <property name="minimum"><number>1</number></property>
+           <property name="maximum"><number>1000000</number></property>
+           <property name="value"><number>500</number></property>
+          </widget>
+         </item>
+         <item><widget class="QRadioButton" name="radio_intervalo"><property name="text"><string>De</string></property></widget></item>
+         <item><widget class="QDateTimeEdit" name="dt_inicio"><property name="calendarPopup"><bool>true</bool></property><property name="displayFormat"><string>dd/MM/yyyy HH:mm:ss</string></property></widget></item>
+         <item><widget class="QLabel" name="lbl_ate"><property name="text"><string>até</string></property></widget></item>
+         <item><widget class="QDateTimeEdit" name="dt_fim"><property name="calendarPopup"><bool>true</bool></property><property name="displayFormat"><string>dd/MM/yyyy HH:mm:ss</string></property></widget></item>
+         <item><widget class="QPushButton" name="btn_consultar"><property name="text"><string>Consultar</string></property></widget></item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QWidget" name="widget_grafico" native="true">
+        <property name="minimumSize"><size><width>500</width><height>320</height></size></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPlainTextEdit" name="txt_console">
+        <property name="maximumSize"><size><width>16777215</width><height>170</height></size></property>
+        <property name="readOnly"><bool>true</bool></property>
+        <property name="placeholderText"><string>Console de protocolo e eventos</string></property>
+       </widget>
+      </item>
      </layout>
     </item>
    </layout>
   </widget>
-  <widget class="QWidget" name="widget_grafico" native="true">
-   <property name="geometry">
-    <rect>
-     <x>320</x>
-     <y>20</y>
-     <width>511</width>
-     <height>411</height>
-    </rect>
-   </property>
-   <property name="sizePolicy">
-    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-     <horstretch>0</horstretch>
-     <verstretch>0</verstretch>
-    </sizepolicy>
-   </property>
-  </widget>
-  <widget class="QWidget" name="layoutWidget">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>400</y>
-     <width>291</width>
-     <height>28</height>
-    </rect>
-   </property>
-   <layout class="QHBoxLayout" name="horizontalLayout_2">
-    <item alignment="Qt::AlignmentFlag::AlignLeft">
-     <widget class="QPushButton" name="btn_tela_serial">
-      <property name="text">
-       <string>Serial</string>
-      </property>
-     </widget>
-    </item>
-    <item alignment="Qt::AlignmentFlag::AlignHCenter">
-     <widget class="QPushButton" name="btn_config_limites">
-      <property name="text">
-       <string>Limites</string>
-      </property>
-     </widget>
-    </item>
-    <item alignment="Qt::AlignmentFlag::AlignRight">
-     <widget class="QPushButton" name="btn_tela_historico">
-      <property name="text">
-       <string>Histórico</string>
-      </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <resources/>
  <connections/>

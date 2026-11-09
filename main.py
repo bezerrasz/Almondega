@@ -1,34 +1,60 @@
-import sys
-import os
+"""Ponto de entrada: infraestrutura (log + config) e montagem View/Controller."""
 import logging
+import sys
+import threading
+
+from PySide6.QtCore import QThread
 from PySide6.QtWidgets import QApplication
-from controller.dashboard_controller import DashboardController
+
+from controllers.app_controller import AppController
+from models.caminhos import LOG_DIR
 from models.config_manager import ConfigManager
-from database.connection import Database
+from views.dashboard_view import DashboardView
+from views.estilo import QSS
+
+
+class FiltroNomeThread(logging.Filter):
+    """Mostra no log o nome da QThread (GUI, SerialThread, DatabaseThread)."""
+    def filter(self, record):
+        nome = QThread.currentThread().objectName()
+        record.threadName = nome or ("GUI" if record.threadName == "MainThread" else record.threadName)
+        return True
+
 
 def configurar_logging():
-    os.makedirs("logs", exist_ok=True)
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
+    handlers = [logging.FileHandler(LOG_DIR / "smartgrid.log", encoding="utf-8"), logging.StreamHandler()]
+    for h in handlers:
+        h.addFilter(FiltroNomeThread())
     logging.basicConfig(
-        filename=os.path.join("logs", "smartgrid.log"),
         level=logging.INFO,
-        format="[%(levelname)s] %(asctime)s - %(message)s",
+        format="[%(levelname)s] %(asctime)s %(threadName)s %(name)s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
-        encoding="utf-8", 
-        force=True
+        handlers=handlers,
+        force=True,
     )
 
+
+def registrar_excecoes_nao_tratadas():
+    def handler(tipo, valor, tb):
+        logging.critical("exceção não tratada", exc_info=(tipo, valor, tb))
+    sys.excepthook = handler
+    threading.excepthook = lambda args: handler(args.exc_type, args.exc_value, args.exc_traceback)
+
+
 def main():
-    # 1. Configurações de infraestrutura (Logs, JSON e Banco SQLite)
     configurar_logging()
-    ConfigManager()
-    Database.init_db()
+    registrar_excecoes_nao_tratadas()
 
-    # 2. Inicialização da Interface Gráfica
     app = QApplication(sys.argv)
-    window = DashboardController()
-    window.show()
+    app.setStyleSheet(QSS)
 
+    config = ConfigManager()          # recria data/config.json se não existir
+    view = DashboardView()
+    controller = AppController(view, config)  # noqa: F841 (mantém a referência viva)
+    view.show()
     sys.exit(app.exec())
+
 
 if __name__ == "__main__":
     main()

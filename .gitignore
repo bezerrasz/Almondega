@@ -218,3 +218,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+# Smart Grid - arquivos gerados em tempo de execução
+data/smartgrid.db
+data/smartgrid.db-wal
+data/smartgrid.db-shm
+data/config.json
+data/config.json.corrompido
+data/*.tmp
+logs/
