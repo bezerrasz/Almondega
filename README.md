@@ -141,7 +141,7 @@ Se o `SYNC` não for confirmado, volta a 9600 e tenta a próxima velocidade meno
 | Placa não confirma o comando | | sem ACK em 2 s, grava `FALHA_COMUNICACAO` e alerta |
 | config.json apagado/corrompido | apagar/editar o arquivo | recriado na hora |
 
-## 🎤 Roteiro sugerido da demonstração (aprox. 8 min)
+## 🎤 Roteiro sugerido da demonstração
 1. Abrir o app e mostrar o console: banco aberto na DatabaseThread.
 2. Conectar e mostrar no console `HS` a 9600, `ACK`, troca para 115200, `SYNC` e o início da telemetria.
 3. Arrastar a janela e abrir diálogos durante a telemetria: nada trava.
