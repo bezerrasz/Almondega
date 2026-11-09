@@ -8,6 +8,7 @@ O padrão é MVC com três threads (GUI, serial e banco).
 ## 👥 Equipe
 * Daniel Bezerra Freire - 411358
 * Bruno Felipe Kuhnen - 414110
+* Yago Colon Marques - 417703
 
 ---
 
