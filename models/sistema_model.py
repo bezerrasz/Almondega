@@ -3,7 +3,9 @@ import logging
 from models.repository import EventoRepository
 
 class SistemaModel:
-    def __init__(self):
+    def __init__(self, persistir=None):
+        # A1/5: quem grava o log no banco (a thread do banco). Sem isso, grava direto como antes.
+        self.persistir = persistir
         self.setpoint_tensao = 0.0
         self.setpoint_corrente = 0.0
         self.tensao_atual = 0.0
@@ -12,7 +14,10 @@ class SistemaModel:
 
     def registrar_log(self, tipo, mensagem):
         # 1. Salva no banco de dados SQLite (Para aparecer na QTableWidget)
-        EventoRepository.registrar_evento(tipo, mensagem)
+        if self.persistir is not None:
+            self.persistir(tipo, mensagem)
+        else:
+            EventoRepository.registrar_evento(tipo, mensagem)
         
         # 2. Avalia a severidade para o ficheiro de auditoria (smartgrid.log)
         texto_log = f"{tipo}: {mensagem}"
