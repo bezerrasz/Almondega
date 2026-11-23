@@ -99,6 +99,11 @@ class SerialWorker(QObject):
                     self._falha(f"Link perdido: {e}")
                 except Cancelado:
                     pass
+                except Exception as e:
+                    # qualquer erro imprevisto vira queda de link: registra e reconecta,
+                    # em vez de matar a thread e deixar o operador sem comunicação
+                    log.exception("erro inesperado na comunicação serial")
+                    self._falha(f"Erro inesperado: {e}")
                 finally:
                     self._fechar_porta()
 
