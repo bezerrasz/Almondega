@@ -44,7 +44,7 @@ class TesteProtocolo(unittest.TestCase):
 
 class TesteConfig(unittest.TestCase):
     def setUp(self):
-        self.dir = tempfile.TemporaryDirectory()
+        self.dir = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         self.caminho = Path(self.dir.name) / "data" / "config.json"
 
     def tearDown(self):
@@ -99,7 +99,7 @@ class TesteSistemaModel(unittest.TestCase):
 
 class TesteBanco(unittest.TestCase):
     def setUp(self):
-        self.dir = tempfile.TemporaryDirectory()
+        self.dir = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         self.original = Database.DB_PATH
         Database.DB_PATH = str(Path(self.dir.name) / "t.db")
         Database.init_db()
