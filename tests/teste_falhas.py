@@ -70,7 +70,7 @@ def main():
         "cabo puxado detectado": any("indisponível" in f for f in falhas),
         "placa travada detectada pelo watchdog": any("Link perdido" in f for f in falhas),
         "handshake refeito após as falhas (3 links)": estados.count("TELEMETRIA") >= 3,
-        "thread terminou de forma cooperativa (parar -> STOP -> finished)": terminou and "ENCERRANDO" in estados,
+        "thread terminou de forma cooperativa (parar -> !P -> finished)": terminou and "ENCERRANDO" in estados,
     }
     for nome, ok in verificacoes.items():
         print(("OK     " if ok else "FALHOU ") + nome)

@@ -1,5 +1,5 @@
 """
-Corte automático: pico de corrente induzido no simulador -> SOBRECARGA -> DJ,0 -> ACK -> corte emergencial ACID.
+Corte automático: relé ligado pela alavanca + pico de corrente induzido no simulador -> SOBRECARGA -> !0 -> ACK -> corte emergencial ACID.
 Roda sem tela e em pasta temporária.
 
     python tests/teste_corte_automatico.py
@@ -61,7 +61,8 @@ def main():
         s.btn_conectar.click()
 
     QTimer.singleShot(200, conectar)
-    QTimer.singleShot(3000, lambda: placa.comando_operador("p"))          # pico de corrente
+    QTimer.singleShot(2000, janela.ui.chk_simulador.click)                # a placa liga com o relé desligado: o operador fecha
+    QTimer.singleShot(3500, lambda: placa.comando_operador("p"))          # pico de corrente
     QTimer.singleShot(7500, lambda: r.__setitem__("status", janela.ui.lbl_status_disjuntor.text()))
     QTimer.singleShot(7600, lambda: r.__setitem__("corrente", janela.ui.lbl_corrente.text()))
     QTimer.singleShot(8000, janela.close)

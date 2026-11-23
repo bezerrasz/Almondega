@@ -20,21 +20,65 @@ from models.repository import EventoRepository, LeituraRepository  # noqa: E402
 from models.sistema_model import SistemaModel  # noqa: E402
 
 
+def _dat(a0, a1, rele, botao):
+    corpo = f"DAT,{a0},{a1},{rele},{botao}"
+    return f"${corpo}*{protocolo.checksum(corpo)}"
+
+
 class TesteProtocolo(unittest.TestCase):
-    def test_data_valido(self):
-        corpo = "DATA,7,220.10,10.50,1"
-        msg = protocolo.interpretar_linha(f"{corpo}*{protocolo.checksum(corpo)}")
+    def test_telemetria_valida_converte_adc_para_volts_e_ampères(self):
+        msg = protocolo.interpretar_linha(_dat(512, 1023, 1, 0))
         d = protocolo.decodificar_telemetria(msg)
-        self.assertEqual((d.seq, d.tensao, d.corrente, d.disjuntor_fechado), (7, 220.10, 10.50, True))
+        self.assertEqual((d.adc_tensao, d.adc_corrente, d.disjuntor_fechado, d.botao_pressionado),
+                         (512, 1023, True, False))
+        self.assertAlmostEqual(d.tensao, 512 * protocolo.TENSAO_FUNDO_ESCALA_V / 1023)
+        self.assertAlmostEqual(d.corrente, protocolo.CORRENTE_FUNDO_ESCALA_A)
+
+    def test_extremos_do_conversor(self):
+        d0 = protocolo.decodificar_telemetria(protocolo.interpretar_linha(_dat(0, 0, 0, 0)))
+        self.assertEqual((d0.tensao, d0.corrente, d0.disjuntor_fechado), (0.0, 0.0, False))
 
     def test_checksum_errado(self):
         with self.assertRaises(protocolo.PacoteInvalido):
-            protocolo.interpretar_linha("DATA,7,220.10,10.50,1*00")
+            protocolo.interpretar_linha("$DAT,100,200,1,0*00")
 
-    def test_lixo(self):
-        for linha in ("", "xyz", "DATA,1,2", "DATA,a,b,c,d*" + protocolo.checksum("DATA,a,b,c,d")):
+    def test_checksum_de_exemplo_calculado_a_mao(self):
+        # XOR de "DAT,1,2,0,0" calculado fora do código
+        ck = 0
+        for ch in "DAT,1,2,0,0":
+            ck ^= ord(ch)
+        self.assertEqual(protocolo.checksum("DAT,1,2,0,0"), f"{ck:02X}")
+
+    def test_lixo_e_campos_invalidos(self):
+        for linha in ("", "xyz", "$DAT,1,2*00", _dat("a", "b", "c", "d"), _dat(2000, 1, 1, 0), _dat(10, 10, 2, 0)):
             with self.assertRaises(protocolo.PacoteInvalido):
                 protocolo.decodificar_telemetria(protocolo.interpretar_linha(linha))
+
+    def test_acks_do_firmware_em_texto(self):
+        casos = {
+            ">>> ACK: INICIANDO EM 115200 BPS <<<": ("ACK", ("INICIO", "115200")),
+            ">>> ACK: INICIANDO EM 9600 BPS <<<": ("ACK", ("INICIO", "9600")),
+            ">>> ACK: RELE LIGADO <<<": ("ACK", ("RELE", "1")),
+            ">>> ACK: RELE DESLIGADO <<<": ("ACK", ("RELE", "0")),
+            ">>> ACK: RELE ALTERNADO <<<": ("ACK", ("RELE", "T")),
+            ">>> ACK: CONVERSAO PAUSADA. RETORNANDO A 9600 BPS <<<": ("ACK", ("PAUSA",)),
+        }
+        for linha, (tipo, campos) in casos.items():
+            m = protocolo.interpretar_linha(linha)
+            self.assertEqual((m.tipo, m.campos), (tipo, campos), linha)
+
+    def test_erro_do_firmware_e_banner(self):
+        self.assertEqual(protocolo.interpretar_linha(">>> ERR: BAUD INVALIDO. Use 9600 <<<").tipo, "NAK")
+        for linha in ("========================================", "PLACA EM ESPERA (9600 baud)",
+                      "Envie !S115200 para iniciar nessa taxa"):
+            self.assertEqual(protocolo.interpretar_linha(linha).tipo, "INFO")
+
+    def test_comandos(self):
+        self.assertEqual(protocolo.cmd_iniciar(115200), "!S115200")
+        self.assertEqual((protocolo.cmd_disjuntor(True), protocolo.cmd_disjuntor(False)), ("!1", "!0"))
+        self.assertEqual(protocolo.cmd_pausar(), "!P")
+        with self.assertRaises(ValueError):
+            protocolo.cmd_iniciar(57600)
 
     def test_sequencia_comeca_pela_alvo_e_termina_em_9600(self):
         self.assertEqual(protocolo.sequencia_negociacao(115200), [115200, 38400, 19200, 9600])

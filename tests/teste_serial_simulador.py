@@ -61,8 +61,8 @@ def main():
     worker.disjuntor_confirmado.connect(lambda f: resultado["dj"].append(f))
     worker.falha_comunicacao.connect(lambda t: print(f"[APP] FALHA: {t}"))
 
-    QTimer.singleShot(int(args.segundos * 1000) - 2500, lambda: worker.enviar_comando("DJ,0"))
-    QTimer.singleShot(int(args.segundos * 1000) - 1500, lambda: worker.enviar_comando("DJ,1"))
+    QTimer.singleShot(int(args.segundos * 1000) - 2500, lambda: worker.enviar_comando("!1"))
+    QTimer.singleShot(int(args.segundos * 1000) - 1500, lambda: worker.enviar_comando("!0"))
     QTimer.singleShot(int(args.segundos * 1000), lambda: worker.parar())
     QTimer.singleShot(int(args.segundos * 1000) + 15000, app.quit)   # segurança
     thread.start()
@@ -73,7 +73,7 @@ def main():
     print("\nRESULTADO:", resultado["baud"], "bps |", resultado["leituras"], "leituras | DJ:",
           resultado["dj"], "| estados:", " > ".join(dict.fromkeys(resultado["estados"])))
     esperado = 19200 if args.fallback else 115200
-    ok = resultado["baud"] == esperado and resultado["leituras"] > 3 and resultado["dj"] == [False, True]
+    ok = resultado["baud"] == esperado and resultado["leituras"] > 3 and resultado["dj"] == [True, False]
     print("OK" if ok else "FALHOU")
     sys.exit(0 if ok else 1)
 

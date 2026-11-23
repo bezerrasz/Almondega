@@ -5,7 +5,7 @@ Roda sem tela (QT_QPA_PLATFORM=offscreen) e numa pasta temporária: não mexe em
     python tests/teste_integracao_gui.py        # Linux/macOS
 
 Verifica o caminho inteiro: handshake -> telemetria -> gráfico em tempo real -> gravação no SQLite ->
-alavanca virtual -> botão PARAR (corte emergencial ACID) -> tela de limites -> consulta de histórico
+alavanca virtual (relé) -> botão PARAR (corte emergencial ACID) -> tela de limites -> consulta de histórico
 assíncrona -> tela de histórico de eventos -> config.json recriado -> encerramento cooperativo.
 """
 import os
@@ -108,20 +108,22 @@ def main():
     agenda = [
         (200, conectar),
         (4000, checar_tempo_real),
-        (4200, u.chk_simulador.click),                                         # alavanca: abre
-        (5300, lambda: r.__setitem__("alavanca_abriu", u.lbl_status_disjuntor.text())),
-        (5400, u.chk_simulador.click),                                         # alavanca: fecha
-        (6500, lambda: r.__setitem__("alavanca_fechou", u.lbl_status_disjuntor.text())),
-        (6700, u.btn_parar.click),                                             # PARAR
-        (7800, lambda: r.__setitem__("apos_parar", u.lbl_status_disjuntor.text())),
-        (8000, limites),
-        (8300, historico_grafico),
-        (9300, checar_historico_grafico),
-        (9400, historico_eventos),
-        (11400, checar_historico_eventos),
-        (11600, lambda: os.remove(pasta / "data" / "config.json")),
-        (13600, lambda: r.__setitem__("config_recriado", (pasta / "data" / "config.json").exists())),
-        (14000, janela.close),
+        (4200, u.chk_simulador.click),                                         # alavanca: fecha (!1)
+        (5300, lambda: r.__setitem__("alavanca_fechou", u.lbl_status_disjuntor.text())),
+        (5400, u.chk_simulador.click),                                         # alavanca: abre (!0)
+        (6500, lambda: r.__setitem__("alavanca_abriu", u.lbl_status_disjuntor.text())),
+        (6600, u.chk_simulador.click),                                         # alavanca: fecha de novo
+        (7700, lambda: r.__setitem__("fechou_de_novo", u.lbl_status_disjuntor.text())),
+        (7900, u.btn_parar.click),                                             # PARAR
+        (9000, lambda: r.__setitem__("apos_parar", u.lbl_status_disjuntor.text())),
+        (9200, limites),
+        (9500, historico_grafico),
+        (10500, checar_historico_grafico),
+        (10600, historico_eventos),
+        (12600, checar_historico_eventos),
+        (12800, lambda: os.remove(pasta / "data" / "config.json")),
+        (14800, lambda: r.__setitem__("config_recriado", (pasta / "data" / "config.json").exists())),
+        (15200, janela.close),
         (40000, app.quit),
     ]
     for ms, acao in agenda:
@@ -140,19 +142,20 @@ def main():
     verificacoes = {
         "handshake concluído (tela serial Conectado)": r.get("serial") == "Conectado",
         "velocidade negociada exibida (115200 bps)": "115200" in r.get("velocidade", ""),
-        "log do handshake na tela serial (HS a 9600, ACK, SYNC)": all(
-            x in r.get("log_handshake", "") for x in ("HS,115200", "ACK,HS", "SYNC")),
+        "log do handshake na tela serial (!S115200 a 9600 e ACK da placa)": all(
+            x in r.get("log_handshake", "") for x in ("!S115200", "INICIANDO EM 115200")),
         "gráfico em tempo real recebeu pontos": r.get("pontos_rt", 0) > 5,
         "medições aparecem no dashboard": r.get("medicao", "").endswith(" V") and r.get("medicao") != "0.0 V",
-        "disjuntor FECHADO ao conectar": r.get("disjuntor_inicial") == "FECHADO",
-        "alavanca abre o disjuntor": r.get("alavanca_abriu") == "ABERTO",
-        "alavanca fecha o disjuntor": r.get("alavanca_fechou") == "FECHADO",
+        "disjuntor ABERTO ao conectar (a placa liga com o relé desligado)": r.get("disjuntor_inicial") == "ABERTO",
+        "alavanca fecha o disjuntor (!1)": r.get("alavanca_fechou") == "FECHADO",
+        "alavanca abre o disjuntor (!0)": r.get("alavanca_abriu") == "ABERTO",
+        "alavanca fecha de novo": r.get("fechou_de_novo") == "FECHADO",
         "botão PARAR abre o disjuntor": r.get("apos_parar") == "ABERTO",
         "popup do corte emergencial (texto original)": any(
             "Corte emergencial acionado com sucesso e salvo no banco!" in a[2] for a in avisos),
         "leituras gravadas no SQLite": leituras > 5,
         "eventos EMERGÊNCIA, OPERAÇÃO, SERIAL e CONFIG gravados": {"EMERGÊNCIA", "OPERAÇÃO", "SERIAL", "CONFIG"} <= set(tipos),
-        "chaveamento gravado uma vez só (2 eventos OPERAÇÃO)": tipos.count("OPERAÇÃO") == 2,
+        "chaveamento gravado uma vez só (3 eventos OPERAÇÃO)": tipos.count("OPERAÇÃO") == 3,
         "status do disjuntor no banco = ABERTO": status == "ABERTO",
         "limites gravados em config.json e regras_limites": regras == [(25.0, 230.0)]
                                                            and r.get("config_json", {}).get("limite_tensao") == 230.0
