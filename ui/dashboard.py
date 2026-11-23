@@ -15,23 +15,44 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QCheckBox, QDialog, QFormLayout,
-    QGridLayout, QHBoxLayout, QLabel, QPushButton,
-    QSizePolicy, QSlider, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QApplication, QCheckBox, QDateTimeEdit, QDialog,
+    QFormLayout, QGridLayout, QGroupBox, QHBoxLayout,
+    QLabel, QPushButton, QRadioButton, QSizePolicy,
+    QSlider, QSpacerItem, QSpinBox, QVBoxLayout,
+    QWidget)
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(849, 449)
+        Dialog.resize(849, 470)
         Dialog.setStyleSheet(u"/* Fundo Escuro  Letras brancas*/\n"
 "QDialog {\n"
 "    background-color: #2b2b2b;\n"
 "	color: #ffffff;\n"
 "}\n"
 "\n"
-"QLabel, QCheckBox {\n"
+"QLabel, QCheckBox, QRadioButton, QGroupBox {\n"
 "    color: #ffffff;\n"
+"}\n"
+"\n"
+"QSpinBox, QDateTimeEdit {\n"
+"    background-color: #1e1e1e;\n"
+"    color: #ffffff;\n"
+"    padding: 2px;\n"
+"}\n"
+"\n"
+"QRadioButton::indicator {\n"
+"    width: 12px;\n"
+"    height: 12px;\n"
+"    border-radius: 7px;\n"
+"    border: 2px solid #9aa0a6;\n"
+"    background-color: #1e1e1e;\n"
+"}\n"
+"\n"
+"QRadioButton::indicator:checked {\n"
+"    background-color: #f5890f;\n"
+"    border-color: #f5890f;\n"
 "}")
         self.layoutWidget = QWidget(Dialog)
         self.layoutWidget.setObjectName(u"layoutWidget")
@@ -223,12 +244,93 @@ class Ui_Dialog(object):
 
         self.widget_grafico = QWidget(Dialog)
         self.widget_grafico.setObjectName(u"widget_grafico")
-        self.widget_grafico.setGeometry(QRect(320, 20, 511, 411))
+        self.widget_grafico.setGeometry(QRect(320, 20, 511, 300))
         sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         sizePolicy1.setHorizontalStretch(0)
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.widget_grafico.sizePolicy().hasHeightForWidth())
         self.widget_grafico.setSizePolicy(sizePolicy1)
+        self.layoutWidget_modo = QWidget(Dialog)
+        self.layoutWidget_modo.setObjectName(u"layoutWidget_modo")
+        self.layoutWidget_modo.setGeometry(QRect(320, 325, 511, 135))
+        self.verticalLayout_modo = QVBoxLayout(self.layoutWidget_modo)
+        self.verticalLayout_modo.setObjectName(u"verticalLayout_modo")
+        self.verticalLayout_modo.setContentsMargins(0, 0, 0, 0)
+        self.horizontalLayout_modo = QHBoxLayout()
+        self.horizontalLayout_modo.setObjectName(u"horizontalLayout_modo")
+        self.label_modo = QLabel(self.layoutWidget_modo)
+        self.label_modo.setObjectName(u"label_modo")
+        self.label_modo.setFont(font4)
+
+        self.horizontalLayout_modo.addWidget(self.label_modo)
+
+        self.radio_tempo_real = QRadioButton(self.layoutWidget_modo)
+        self.radio_tempo_real.setObjectName(u"radio_tempo_real")
+        self.radio_tempo_real.setChecked(True)
+
+        self.horizontalLayout_modo.addWidget(self.radio_tempo_real)
+
+        self.radio_historico = QRadioButton(self.layoutWidget_modo)
+        self.radio_historico.setObjectName(u"radio_historico")
+
+        self.horizontalLayout_modo.addWidget(self.radio_historico)
+
+        self.horizontalSpacer_modo = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_modo.addItem(self.horizontalSpacer_modo)
+
+
+        self.verticalLayout_modo.addLayout(self.horizontalLayout_modo)
+
+        self.grp_historico = QGroupBox(self.layoutWidget_modo)
+        self.grp_historico.setObjectName(u"grp_historico")
+        self.grp_historico.setEnabled(False)
+        self.gridLayout_historico = QGridLayout(self.grp_historico)
+        self.gridLayout_historico.setObjectName(u"gridLayout_historico")
+        self.radio_ultimas = QRadioButton(self.grp_historico)
+        self.radio_ultimas.setObjectName(u"radio_ultimas")
+        self.radio_ultimas.setChecked(True)
+
+        self.gridLayout_historico.addWidget(self.radio_ultimas, 0, 0, 1, 1)
+
+        self.spin_ultimas = QSpinBox(self.grp_historico)
+        self.spin_ultimas.setObjectName(u"spin_ultimas")
+        self.spin_ultimas.setMinimum(1)
+        self.spin_ultimas.setMaximum(1000000)
+        self.spin_ultimas.setValue(500)
+
+        self.gridLayout_historico.addWidget(self.spin_ultimas, 0, 1, 1, 1)
+
+        self.radio_intervalo = QRadioButton(self.grp_historico)
+        self.radio_intervalo.setObjectName(u"radio_intervalo")
+
+        self.gridLayout_historico.addWidget(self.radio_intervalo, 1, 0, 1, 1)
+
+        self.dt_inicio = QDateTimeEdit(self.grp_historico)
+        self.dt_inicio.setObjectName(u"dt_inicio")
+        self.dt_inicio.setCalendarPopup(True)
+
+        self.gridLayout_historico.addWidget(self.dt_inicio, 1, 1, 1, 1)
+
+        self.label_ate = QLabel(self.grp_historico)
+        self.label_ate.setObjectName(u"label_ate")
+
+        self.gridLayout_historico.addWidget(self.label_ate, 1, 2, 1, 1)
+
+        self.dt_fim = QDateTimeEdit(self.grp_historico)
+        self.dt_fim.setObjectName(u"dt_fim")
+        self.dt_fim.setCalendarPopup(True)
+
+        self.gridLayout_historico.addWidget(self.dt_fim, 1, 3, 1, 1)
+
+        self.btn_consultar = QPushButton(self.grp_historico)
+        self.btn_consultar.setObjectName(u"btn_consultar")
+
+        self.gridLayout_historico.addWidget(self.btn_consultar, 1, 4, 1, 1)
+
+
+        self.verticalLayout_modo.addWidget(self.grp_historico)
+
         self.layoutWidget1 = QWidget(Dialog)
         self.layoutWidget1.setObjectName(u"layoutWidget1")
         self.layoutWidget1.setGeometry(QRect(10, 400, 291, 28))
@@ -274,6 +376,17 @@ class Ui_Dialog(object):
         self.label_7.setText(QCoreApplication.translate("Dialog", u"1000", None))
         self.label_8.setText(QCoreApplication.translate("Dialog", u"2500", None))
         self.label_9.setText(QCoreApplication.translate("Dialog", u"4000", None))
+        self.label_modo.setText(QCoreApplication.translate("Dialog", u"Modo do gr\u00e1fico:", None))
+        self.radio_tempo_real.setText(QCoreApplication.translate("Dialog", u"Tempo real", None))
+        self.radio_historico.setText(QCoreApplication.translate("Dialog", u"Consulta de hist\u00f3rico", None))
+        self.grp_historico.setTitle(QCoreApplication.translate("Dialog", u"Filtro do hist\u00f3rico (SQLite)", None))
+        self.radio_ultimas.setText(QCoreApplication.translate("Dialog", u"\u00daltimas", None))
+        self.spin_ultimas.setSuffix(QCoreApplication.translate("Dialog", u" leituras", None))
+        self.radio_intervalo.setText(QCoreApplication.translate("Dialog", u"Intervalo", None))
+        self.dt_inicio.setDisplayFormat(QCoreApplication.translate("Dialog", u"dd/MM/yyyy HH:mm:ss", None))
+        self.label_ate.setText(QCoreApplication.translate("Dialog", u"at\u00e9", None))
+        self.dt_fim.setDisplayFormat(QCoreApplication.translate("Dialog", u"dd/MM/yyyy HH:mm:ss", None))
+        self.btn_consultar.setText(QCoreApplication.translate("Dialog", u"Consultar", None))
         self.btn_tela_serial.setText(QCoreApplication.translate("Dialog", u"Serial", None))
         self.btn_config_limites.setText(QCoreApplication.translate("Dialog", u"Limites", None))
         self.btn_tela_historico.setText(QCoreApplication.translate("Dialog", u"Hist\u00f3rico", None))

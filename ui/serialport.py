@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'serialport.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.11.1
+## Created by: Qt User Interface Compiler version 6.12.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -16,14 +16,14 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QComboBox, QDialog, QGridLayout,
-    QHBoxLayout, QLabel, QPushButton, QSizePolicy,
-    QSpinBox, QWidget)
+    QHBoxLayout, QLabel, QPlainTextEdit, QPushButton,
+    QSizePolicy, QSpinBox, QWidget)
 
 class Ui_SerialDialog(object):
     def setupUi(self, SerialDialog):
         if not SerialDialog.objectName():
             SerialDialog.setObjectName(u"SerialDialog")
-        SerialDialog.resize(541, 342)
+        SerialDialog.resize(541, 480)
         SerialDialog.setStyleSheet(u"/* Fundo escuro */\n"
 "QDialog {\n"
 "    background-color: #2b2b2b;\n"
@@ -37,6 +37,14 @@ class Ui_SerialDialog(object):
 "}\n"
 "\n"
 "/* Caixas de sele\u00e7\u00e3o e n\u00famero */\n"
+"QPlainTextEdit {\n"
+"    background-color: #1e1e1e;\n"
+"    color: #cfcfcf;\n"
+"    font-family: Consolas, monospace;\n"
+"    font-size: 11px;\n"
+"    border-radius: 4px;\n"
+"}\n"
+"\n"
 "QComboBox, QSpinBox {\n"
 "    background-color: #1e1e1e;\n"
 "    color: #ffffff;\n"
@@ -64,7 +72,8 @@ class Ui_SerialDialog(object):
 "\n"
 "QPushButton:disabled {\n"
 "    background-color: #555555;\n"
-"    color: #888888;\n"
+""
+                        "    color: #888888;\n"
 "}")
         self.lbl_titulo = QLabel(SerialDialog)
         self.lbl_titulo.setObjectName(u"lbl_titulo")
@@ -90,7 +99,7 @@ class Ui_SerialDialog(object):
         self.lbl_status.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.layoutWidget = QWidget(SerialDialog)
         self.layoutWidget.setObjectName(u"layoutWidget")
-        self.layoutWidget.setGeometry(QRect(30, 100, 251, 141))
+        self.layoutWidget.setGeometry(QRect(30, 90, 251, 175))
         self.gridLayout = QGridLayout(self.layoutWidget)
         self.gridLayout.setObjectName(u"gridLayout")
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
@@ -135,9 +144,28 @@ class Ui_SerialDialog(object):
 
         self.gridLayout.addWidget(self.spin_timeout, 2, 1, 1, 1)
 
+        self.lbl_amostragem = QLabel(self.layoutWidget)
+        self.lbl_amostragem.setObjectName(u"lbl_amostragem")
+        self.lbl_amostragem.setFont(font1)
+
+        self.gridLayout.addWidget(self.lbl_amostragem, 3, 0, 1, 1)
+
+        self.spin_amostragem = QSpinBox(self.layoutWidget)
+        self.spin_amostragem.setObjectName(u"spin_amostragem")
+        self.spin_amostragem.setMinimumSize(QSize(80, 0))
+        self.spin_amostragem.setStyleSheet(u"QSpinBox {\n"
+"    padding-right: 20px;\n"
+"}")
+        self.spin_amostragem.setMinimum(200)
+        self.spin_amostragem.setMaximum(5000)
+        self.spin_amostragem.setSingleStep(100)
+        self.spin_amostragem.setValue(1000)
+
+        self.gridLayout.addWidget(self.spin_amostragem, 3, 1, 1, 1)
+
         self.layoutWidget1 = QWidget(SerialDialog)
         self.layoutWidget1.setObjectName(u"layoutWidget1")
-        self.layoutWidget1.setGeometry(QRect(100, 260, 341, 71))
+        self.layoutWidget1.setGeometry(QRect(100, 280, 341, 60))
         self.horizontalLayout = QHBoxLayout(self.layoutWidget1)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
@@ -151,6 +179,19 @@ class Ui_SerialDialog(object):
 
         self.horizontalLayout.addWidget(self.btn_desconectar)
 
+        self.lbl_velocidade = QLabel(SerialDialog)
+        self.lbl_velocidade.setObjectName(u"lbl_velocidade")
+        self.lbl_velocidade.setGeometry(QRect(370, 220, 141, 40))
+        self.lbl_velocidade.setStyleSheet(u"QLabel {\n"
+"    font-size: 12px;\n"
+"    font-weight: normal;\n"
+"}")
+        self.lbl_velocidade.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lbl_velocidade.setWordWrap(True)
+        self.txt_log_serial = QPlainTextEdit(SerialDialog)
+        self.txt_log_serial.setObjectName(u"txt_log_serial")
+        self.txt_log_serial.setGeometry(QRect(30, 355, 481, 110))
+        self.txt_log_serial.setReadOnly(True)
 
         self.retranslateUi(SerialDialog)
 
@@ -164,7 +205,10 @@ class Ui_SerialDialog(object):
         self.lbl_com.setText(QCoreApplication.translate("SerialDialog", u"Porta COM:", None))
         self.lbl_baudrate.setText(QCoreApplication.translate("SerialDialog", u"Baud Rate:", None))
         self.lbl_timeout.setText(QCoreApplication.translate("SerialDialog", u"Timeout (s):", None))
+        self.lbl_amostragem.setText(QCoreApplication.translate("SerialDialog", u"Amostragem (ms):", None))
         self.btn_conectar.setText(QCoreApplication.translate("SerialDialog", u"CONECTAR", None))
         self.btn_desconectar.setText(QCoreApplication.translate("SerialDialog", u"DESCONECTAR", None))
+        self.lbl_velocidade.setText(QCoreApplication.translate("SerialDialog", u"Velocidade: -", None))
+        self.txt_log_serial.setPlaceholderText(QCoreApplication.translate("SerialDialog", u"Registro do protocolo serial (handshake, velocidade, ACK)...", None))
     # retranslateUi
 
