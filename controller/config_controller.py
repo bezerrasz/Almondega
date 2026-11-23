@@ -2,13 +2,13 @@ from PySide6.QtWidgets import QDialog
 from ui.config_limites import Ui_Dialog
 from PySide6.QtWidgets import QMessageBox
 from models import config_manager
-from database.connection import Database
 import json
 import os
 
 class ConfigController(QDialog):
-    def __init__(self):
+    def __init__(self, persistencia):
         super().__init__()
+        self.persistencia = persistencia      # A1/5: o banco é acessado pela thread do banco
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
         self.setWindowTitle("⚙️ Configurar Limites (Setpoints)")
@@ -49,14 +49,10 @@ class ConfigController(QDialog):
             dados["limite_corrente"] = val_corrente
             self.cfg.salvar(dados) 
         
-            with Database.get_connection() as conn:
-                cursor = conn.cursor()
-                
-                cursor.execute("""
-                    INSERT OR REPLACE INTO regras_limites (id, limite_corrente, tensao_desarme) 
-                    VALUES (1, ?, ?)
-                """, (val_corrente, val_tensao))
-                conn.commit() 
+            # INSERT OR REPLACE em regras_limites, agora executado na DatabaseThread
+            self.persistencia.salvar_regras(val_corrente, val_tensao)
+            self.limite_tensao = val_tensao          # o Dashboard lê estes dois valores ao aceitar
+            self.limite_corrente = val_corrente
             self.accept()
             
         except ValueError:

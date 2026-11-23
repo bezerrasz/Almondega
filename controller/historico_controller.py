@@ -2,10 +2,9 @@ import datetime
 from PySide6.QtWidgets import QDialog, QTableWidgetItem, QHeaderView
 from PySide6.QtCore import QDate 
 from ui.tela_historico import Ui_Dialog
-from models.repository import EventoRepository 
 
 class HistoricoController(QDialog):
-    def __init__(self): 
+    def __init__(self, persistencia): 
         super().__init__()
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
@@ -23,8 +22,17 @@ class HistoricoController(QDialog):
         self.ui.btn_fechar.clicked.connect(self.accept)
         self.ui.btn_filtrar.clicked.connect(self.filtrar_por_data) 
 
-        # PREENCHE A TABELA DIRETO DO BANCO DE DADOS
-        self.logs_completos = EventoRepository.listar_todos()
+        # PREENCHE A TABELA COM OS DADOS DO BANCO (A1/5: consulta assíncrona na DatabaseThread)
+        self.logs_completos = []
+        self.persistencia = persistencia
+        self._pedido = persistencia.consultar_eventos()
+        persistencia.eventos_prontos.connect(self.receber_eventos)
+        self.finished.connect(lambda _=0: persistencia.eventos_prontos.disconnect(self.receber_eventos))
+
+    def receber_eventos(self, pedido, linhas):
+        if pedido != self._pedido:
+            return
+        self.logs_completos = linhas
         self.preencher_tabela(self.logs_completos)
 
     def preencher_tabela(self, lista_para_mostrar):
