@@ -1,7 +1,7 @@
 import logging
 from collections import deque
 import matplotlib.pyplot as plt
-from matplotlib.dates import DateFormatter
+from matplotlib.dates import AutoDateLocator, DateFormatter
 
 from PySide6.QtWidgets import QDialog, QMessageBox, QVBoxLayout, QToolTip
 from PySide6.QtGui import QCursor
@@ -255,7 +255,10 @@ class DashboardController(QDialog):
         self.ax.set_ylabel("Potência (W)")
         self.ax.set_ylim(0, max([3500] + [p * 1.1 for p in potencias]))
         self.ax.grid(True)
+        # poucos rótulos de data/hora, inclinados, e mais margem embaixo para caber o título do eixo
+        self.ax.xaxis.set_major_locator(AutoDateLocator(minticks=3, maxticks=5))
         self.ax.xaxis.set_major_formatter(DateFormatter("%d/%m %H:%M:%S"))
+        self.fig.subplots_adjust(bottom=0.34)
         for rotulo in self.ax.get_xticklabels():
             rotulo.set_rotation(20)
             rotulo.set_ha("right")
@@ -269,6 +272,7 @@ class DashboardController(QDialog):
         self.ax.set_ylabel("Potência (W)")
         self.ax.set_ylim(0, 3500)
         self.ax.grid(True)
+        self.fig.subplots_adjust(bottom=0.18)      # margem original do modo tempo real
         self.grafico_sujo = True
         self.atualizar_linha_grafico()
         self.canvas.draw()
