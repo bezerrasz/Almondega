@@ -17,6 +17,7 @@ class ConexaoController(QObject):
     velocidade_negociada = Signal(int)
     leitura_recebida = Signal(object)
     disjuntor_confirmado = Signal(bool)
+    botao_emergencia = Signal()           # botão físico da placa
     estatisticas = Signal(int, int, int)
     falha_comunicacao = Signal(str)
     conexao_encerrada = Signal()          # a thread terminou de verdade
@@ -48,6 +49,7 @@ class ConexaoController(QObject):
         w.velocidade_negociada.connect(self.velocidade_negociada)
         w.leitura_recebida.connect(self.leitura_recebida)
         w.disjuntor_confirmado.connect(self.disjuntor_confirmado)
+        w.botao_emergencia.connect(self.botao_emergencia)
         w.estatisticas.connect(self.estatisticas)
         w.falha_comunicacao.connect(self.falha_comunicacao)
 

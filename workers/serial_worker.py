@@ -1,8 +1,13 @@
 """
 SerialWorker: roda inteiro numa QThread dedicada.
 
+Protocolo do firmware do professor (ver models/protocolo.py):
+    a placa liga em espera a 9600 bps; "!S<baud>" -> ACK em texto -> a placa troca de velocidade
+    e passa a mandar "$DAT,<A0>,<A1>,<rele>,<botao>*<CK>"; "!1"/"!0" comandam o relé (disjuntor);
+    "!P" pausa a conversão e a placa volta a 9600.
+
 Máquina de estados do lado desktop:
-    ABRINDO -> HANDSHAKE (sempre a 9600) -> SINCRONIZANDO (nova velocidade)
+    ABRINDO -> HANDSHAKE (sempre a 9600) -> SINCRONIZANDO (nova velocidade, espera a 1ª telemetria)
             -> TELEMETRIA -> (falha) -> RECONECTANDO -> ABRINDO ...
     Qualquer estado + parar() -> ENCERRANDO -> DESCONECTADO
 
@@ -27,10 +32,8 @@ log = logging.getLogger(__name__)
 
 AGUARDAR_RESET_S = 2.0       # Arduino reinicia ao abrir a porta (DTR)
 TIMEOUT_RESPOSTA_S = 1.2     # espera por um ACK
-TENTATIVAS_HS = 3
-TENTATIVAS_SYNC = 2
-ESPERA_VOLTA_9600_S = 3.3    # placa volta a 9600 após 3 s sem SYNC
-INTERVALO_PING_S = 1.0
+TENTATIVAS_INICIO = 3
+ESPERA_TELEMETRIA_S = 2.0    # após trocar de velocidade, tempo para chegar o 1º pacote válido
 INTERVALO_RECONEXAO_S = 2.0
 
 
@@ -51,7 +54,8 @@ class SerialWorker(QObject):
     log_protocolo = Signal(str)              # linha para o console da interface
     velocidade_negociada = Signal(int)
     leitura_recebida = Signal(object)        # LeituraTelemetria
-    disjuntor_confirmado = Signal(bool)      # ACK,DJ,x
+    disjuntor_confirmado = Signal(bool)      # ACK do relé: ligado (True) / desligado (False)
+    botao_emergencia = Signal()              # botão físico (pino 11) foi apertado (borda de subida)
     estatisticas = Signal(int, int, int)     # recebidos, inválidos, perdidos
     falha_comunicacao = Signal(str)
     finalizado = Signal()
@@ -72,7 +76,11 @@ class SerialWorker(QObject):
         self._ser: serial.Serial | None = None
         self._buffer = b""
         self._recebidos = self._invalidos = self._perdidos = 0
-        self._ultimo_seq: int | None = None
+        self._seq = 0                              # contador de leituras emitidas (o firmware não numera)
+        self._ultima_emissao = 0.0
+        self._ultimo_rele: bool | None = None
+        self._ultimo_botao: bool | None = None   # None = ainda não viu nenhum pacote
+        self._botao_consecutivos = 0
 
     # ---------------- API thread-safe (chamada pela GUI) ----------------
     def parar(self):
@@ -133,79 +141,71 @@ class SerialWorker(QObject):
         self._ser.reset_input_buffer()
 
     def _negociar(self) -> int:
-        """Handshake sempre a 9600; tenta a velocidade alvo e cai para as menores."""
+        """Handshake sempre a 9600 ("!S<baud>"); tenta a velocidade alvo e cai para as menores."""
         for baud in protocolo.sequencia_negociacao(self.baud_alvo):
             if self._parar.is_set():
                 raise Cancelado()
 
             self._estado("HANDSHAKE", f"9600 bps -> pedindo {baud} bps")
-            ok = self._enviar_hs(baud)
+            ok = self._enviar_inicio(baud)
             if self._parar.is_set():
                 raise Cancelado()
             if not ok:
-                raise FalhaHandshake("placa não respondeu ao HS a 9600 bps")
+                raise FalhaHandshake("placa não respondeu ao !S a 9600 bps")
 
             if baud != protocolo.BAUD_INICIAL:
-                self._ser.flush()
-                time.sleep(0.05)
+                # a placa responde o ACK a 9600 e só depois troca; nada é transmitido no intervalo
                 self._ser.baudrate = baud           # troca sem fechar a porta (não reseta o Arduino)
                 self._ser.reset_input_buffer()
                 self._buffer = b""
 
-            self._estado("SINCRONIZANDO", f"confirmando link a {baud} bps")
-            ok = self._enviar_sync()
-            if self._parar.is_set():
-                raise Cancelado()
-            if ok:
+            self._estado("SINCRONIZANDO", f"aguardando telemetria a {baud} bps")
+            if self._aguardar(lambda m: m.tipo == "DATA", timeout=max(self.timeout_resposta, ESPERA_TELEMETRIA_S)):
                 self._estado("TELEMETRIA", f"link estabelecido a {baud} bps")
                 return baud
-
-            self._log(f"SYNC sem resposta a {baud} bps; voltando para 9600 e tentando velocidade menor")
-            self._ser.baudrate = protocolo.BAUD_INICIAL
-            if self._esperar(ESPERA_VOLTA_9600_S):
+            if self._parar.is_set():
                 raise Cancelado()
-            self._ser.reset_input_buffer()
-            self._buffer = b""
+
+            self._log(f"sem telemetria a {baud} bps; pausando a placa e tentando velocidade menor")
+            self._voltar_para_9600()
         raise FalhaHandshake("nenhuma velocidade foi confirmada")
 
-    def _enviar_hs(self, baud: int) -> bool:
-        cmd = protocolo.cmd_handshake(baud, self.periodo_ms)
-        for tentativa in range(1, TENTATIVAS_HS + 1):
+    def _enviar_inicio(self, baud: int) -> bool:
+        cmd = protocolo.cmd_iniciar(baud)
+        for tentativa in range(1, TENTATIVAS_INICIO + 1):
             self._escrever(cmd)
-            msg = self._aguardar(lambda m: (m.tipo == "ACK" and m.campos[:1] == ("HS",))
-                                 or (m.tipo == "NAK" and bool(m.campos) and m.campos[0].startswith("HS")))
-            if msg and msg.tipo == "ACK" and len(msg.campos) >= 2 and msg.campos[1] == str(baud):
+            msg = self._aguardar(lambda m: (m.tipo == "ACK" and m.campos[:1] == ("INICIO",)) or m.tipo == "NAK")
+            if msg and msg.tipo == "ACK" and msg.campos[1] == str(baud):
                 return True
             if msg and msg.tipo == "NAK":
-                raise FalhaHandshake(f"placa recusou o handshake: {','.join(msg.campos)}")
-            self._log(f"sem ACK do HS (tentativa {tentativa}/{TENTATIVAS_HS})")
+                raise FalhaHandshake(f"placa recusou o início: {msg.campos[0]}")
+            self._log(f"sem ACK do início (tentativa {tentativa}/{TENTATIVAS_INICIO})")
         return False
 
-    def _enviar_sync(self) -> bool:
-        for _ in range(TENTATIVAS_SYNC):
-            self._escrever(protocolo.cmd_sync())
-            msg = self._aguardar(lambda m: m.tipo == "ACK" and m.campos[:1] == ("SYNC",))
-            if msg:
-                return True
-        return False
+    def _voltar_para_9600(self):
+        """!P na velocidade atual: a placa responde o ACK e volta a 9600, em espera."""
+        self._escrever(protocolo.cmd_pausar())
+        self._aguardar(lambda m: m.tipo == "ACK" and m.campos[:1] == ("PAUSA",), timeout=0.8)
+        self._ser.baudrate = protocolo.BAUD_INICIAL
+        self._ser.reset_input_buffer()
+        self._buffer = b""
 
     def _laco_telemetria(self, baud: int):
         while not self._comandos.empty():      # descarta comandos antigos
             self._comandos.get_nowait()
         self._recebidos = self._invalidos = self._perdidos = 0
-        self._ultimo_seq = None
+        self._seq = 0
+        self._ultima_emissao = 0.0
+        self._ultimo_rele = None
+        self._ultimo_botao = None
+        self._botao_consecutivos = 0
 
         watchdog = max(3 * self.periodo_ms / 1000.0, 3.0)
         agora = time.monotonic()
-        ultimo_dado = ultimo_ping = ultima_estat = agora
+        ultimo_dado = ultima_estat = agora
 
         while not self._parar.is_set():
             self._despachar_comandos()
-
-            agora = time.monotonic()
-            if agora - ultimo_ping >= INTERVALO_PING_S:
-                self._escrever(protocolo.cmd_ping(), registrar=False)
-                ultimo_ping = agora
 
             for linha in self._ler_linhas():
                 if self._tratar_linha(linha):
@@ -218,11 +218,11 @@ class SerialWorker(QObject):
             if agora - ultimo_dado > watchdog:
                 raise LinkPerdido(f"nenhuma telemetria válida há {watchdog:.0f} s")
 
-        # encerramento cooperativo: avisa a placa para voltar ao estado de espera
-        self._estado("ENCERRANDO", "enviando STOP para a placa")
+        # encerramento cooperativo: pausa a placa (ela volta a 9600 e fica em espera)
+        self._estado("ENCERRANDO", "enviando !P para a placa")
         try:
-            self._escrever(protocolo.cmd_stop())
-            self._aguardar(lambda m: m.tipo == "ACK" and m.campos[:1] == ("STOP",), timeout=0.5,
+            self._escrever(protocolo.cmd_pausar())
+            self._aguardar(lambda m: m.tipo == "ACK" and m.campos[:1] == ("PAUSA",), timeout=0.5,
                            respeitar_parada=False)
         except (serial.SerialException, OSError):
             pass
@@ -243,18 +243,47 @@ class SerialWorker(QObject):
                 self._invalidos += 1
                 self._log(f"pacote descartado: {e}")
                 return False
-            if self._ultimo_seq is not None and d.seq > self._ultimo_seq + 1:
-                self._perdidos += d.seq - self._ultimo_seq - 1
-            self._ultimo_seq = d.seq
             self._recebidos += 1
-            self.leitura_recebida.emit(LeituraTelemetria.criar(
-                d.tensao, d.corrente, self.fator_potencia, d.seq, d.disjuntor_fechado))
+            self._verificar_botao(d.botao_pressionado)      # em TODO pacote (não passa pela decimação)
+            self._emitir_leitura(d)
             return True
 
         self._log(f"<- {linha}")
-        if msg.tipo == "ACK" and msg.campos[:1] == ("DJ",) and len(msg.campos) >= 2:
+        if msg.tipo == "ACK" and msg.campos[:1] == ("RELE",) and msg.campos[1] in ("0", "1"):
             self.disjuntor_confirmado.emit(msg.campos[1] == "1")
         return False
+
+    def _verificar_botao(self, pressionado: bool):
+        """Botão físico de emergência: dispara só na SUBIDA (solto -> apertado), com 2 pacotes
+        seguidos em 1 como antirruído. Se já estiver apertado no 1º pacote, não dispara."""
+        if self._ultimo_botao is None:
+            self._ultimo_botao = pressionado
+            self._botao_consecutivos = 2 if pressionado else 0
+            return
+        if not pressionado:
+            self._ultimo_botao = False
+            self._botao_consecutivos = 0
+            return
+        self._botao_consecutivos += 1
+        if not self._ultimo_botao and self._botao_consecutivos >= 2:
+            self._ultimo_botao = True
+            self._log("botão físico de emergência apertado")
+            self.botao_emergencia.emit()
+
+    def _emitir_leitura(self, d: protocolo.DadosTelemetria):
+        """A placa manda ~200 pacotes/s; o app emite uma leitura por período de amostragem.
+        Uma mudança no relé (disjuntor) é emitida na hora, sem esperar o período."""
+        agora = time.monotonic()
+        mudou_rele = self._ultimo_rele is not None and d.disjuntor_fechado != self._ultimo_rele
+        self._ultimo_rele = d.disjuntor_fechado
+        if not mudou_rele and agora - self._ultima_emissao < self.periodo_ms / 1000.0:
+            return
+        self._ultima_emissao = agora
+        self._seq += 1
+        # disjuntor aberto = sem carga: o potenciômetro de corrente continua girando, mas a corrente é 0
+        corrente = d.corrente if d.disjuntor_fechado else 0.0
+        self.leitura_recebida.emit(LeituraTelemetria.criar(
+            d.tensao, corrente, self.fator_potencia, self._seq, d.disjuntor_fechado))
 
     # ---------------- utilitários de E/S ----------------
     def _despachar_comandos(self):

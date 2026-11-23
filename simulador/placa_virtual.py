@@ -1,8 +1,12 @@
 """
-Simulador da placa Smart Grid em porta serial virtual.
+Simulador da placa do professor em porta serial virtual (mesmo protocolo do firmware real).
 
-Implementa exatamente o mesmo protocolo do firmware (firmware/smartgrid_placa):
-  AGUARDANDO_HS -> AGUARDANDO_SYNC -> TELEMETRIA
+A placa liga em espera a 9600 bps e imprime um banner. Todo comando começa com '!':
+    !S<baud>   inicia a telemetria nessa velocidade (9600/19200/38400/115200)
+    !1 / !L    liga o relé  (disjuntor FECHADO)      !0 / !D   desliga o relé
+    !T         alterna o relé
+    !P / !STOP pausa a conversão e volta a 9600 bps
+Telemetria:  $DAT,<A0>,<A1>,<rele>,<botao>*<CK>   (A0 = tensão, A1 = corrente, valores de 0 a 1023)
 
 Uso (Windows com com0com criando o par COM10 <-> COM11):
     python simulador/placa_virtual.py COM11
@@ -17,9 +21,10 @@ Falhas que podem ser induzidas durante a demonstração (digite + Enter):
     t  -> sobretensão por 6 s
     c  -> envia 3 pacotes com checksum errado
     m  -> placa "trava" (para de responder) por 8 s
-    r  -> reinicia a placa (volta a 9600 / aguardando handshake)
+    b  -> aperta o botão físico (pino 11) por 0,5 s
+    r  -> reinicia a placa (volta a 9600 / em espera, relé desligado)
     q  -> encerra o simulador
-Opção --falhar-baud 115200 faz a placa não entender o SYNC nessa velocidade,
+Opção --falhar-baud 115200 faz a placa não transmitir nessa velocidade,
 para demonstrar o fallback de velocidade do desktop.
 """
 import argparse
@@ -28,65 +33,60 @@ import random
 import sys
 import threading
 import time
+from pathlib import Path
 
 import serial
 
-BAUD_INICIAL = 9600
-BAUDS_SUPORTADOS = (9600, 19200, 38400, 115200)
-TIMEOUT_SYNC = 3.0
-TIMEOUT_LINK = 5.0
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from models import protocolo  # noqa: E402  (mesma escala A/D do app)
+
+BAUD_INICIAL = protocolo.BAUD_INICIAL
+BAUDS_SUPORTADOS = protocolo.BAUDS_SUPORTADOS
+INTERVALO_AMOSTRA = 0.005          # o timer do firmware dispara a cada 5 ms (200 amostras/s)
 
 
 def checksum(texto: str) -> str:
-    ck = 0
-    for ch in texto:
-        ck ^= ord(ch)
-    return f"{ck:02X}"
+    return protocolo.checksum(texto)
 
 
 class PlacaVirtual:
-    def __init__(self, porta: serial.Serial, falhar_bauds=()):
+    def __init__(self, porta: serial.Serial, falhar_bauds=(), rele_inicial: bool = False):
         self.porta = porta
         self.falhar_bauds = set(falhar_bauds)
+        self.rele_inicial = rele_inicial
         self.lock = threading.Lock()
         self.rodando = True
         self._reiniciar()
 
     # ---------------- estado ----------------
     def _reiniciar(self):
-        self.estado = "AGUARDANDO_HS"
+        self.conversao = False
         self.baud = BAUD_INICIAL
         self.porta.baudrate = BAUD_INICIAL
-        self.periodo = 1.0
-        self.seq = 0
-        self.disjuntor_fechado = True
-        self.instante_estado = time.monotonic()
-        self.ultimo_rx = time.monotonic()
+        self.rele = self.rele_inicial
+        self.botao = False
+        self.botao_ate = 0.0
         self.ultimo_envio = 0.0
-        self.buffer = b""
+        self.cmd = ""
+        self.gravando = False
         self.pico_ate = 0.0
         self.sobretensao_ate = 0.0
         self.travada_ate = 0.0
         self.corromper = 0
-        self._log("placa iniciada: AGUARDANDO_HS a 9600 bps")
+        self._log("placa iniciada: EM ESPERA a 9600 bps")
+        self._banner()
 
-    def _mudar_estado(self, novo):
-        self.estado = novo
-        self.instante_estado = time.monotonic()
-        self._log(f"estado -> {novo} ({self.baud} bps)")
+    def _banner(self):
+        for linha in ("", "=" * 40, "PLACA EM ESPERA (9600 baud)",
+                      "Envie !S115200 para iniciar nessa taxa",
+                      "Envie !P para pausar e voltar para 9600", "=" * 40):
+            self._enviar(linha)
 
     def _trocar_baud(self, novo):
         self.porta.flush()
         time.sleep(0.02)
         self.porta.baudrate = novo
         self.baud = novo
-        self.buffer = b""
-
-    def _voltar_espera(self):
-        if self.baud != BAUD_INICIAL:
-            self._trocar_baud(BAUD_INICIAL)
-        self.seq = 0
-        self._mudar_estado("AGUARDANDO_HS")
 
     # ---------------- E/S ----------------
     @staticmethod
@@ -100,114 +100,99 @@ class PlacaVirtual:
         n = self.porta.in_waiting
         if not n:
             return
-        self.buffer += self.porta.read(n)
-        self.ultimo_rx = time.monotonic()
-        while b"\n" in self.buffer:
-            bruto, self.buffer = self.buffer.split(b"\n", 1)
-            linha = bruto.decode("ascii", errors="replace").strip()
-            if linha:
-                self._processar(linha)
+        for byte in self.porta.read(n):
+            c = chr(byte)
+            if self.estava_travada():
+                continue
+            if c == "!":
+                self.gravando = True
+                self.cmd = ""
+            elif self.gravando:
+                if c in "\r\n":
+                    if self.cmd:
+                        self._processar(self.cmd)
+                    self.gravando = False
+                    self.cmd = ""
+                elif c != " " and len(self.cmd) < 15:
+                    self.cmd += c
 
-    # ---------------- medições ----------------
-    def _tensao(self):
+    def estava_travada(self) -> bool:
+        return time.monotonic() < self.travada_ate
+
+    # ---------------- medições (valores brutos do conversor A/D) ----------------
+    def _adc_tensao(self):
         t = time.monotonic()
         v = 220.0 + 2.5 * math.sin(t / 7.0) + random.uniform(-0.5, 0.5)
         if t < self.sobretensao_ate:
-            v = 252.0 + random.uniform(-1, 1)
-        return v
+            v = 245.0 + random.uniform(-1, 1)
+        return self._para_adc(v, protocolo.TENSAO_FUNDO_ESCALA_V)
 
-    def _corrente(self):
-        if not self.disjuntor_fechado:
-            return 0.0
+    def _adc_corrente(self):
         t = time.monotonic()
         i = 11.0 + 3.0 * math.sin(t / 10.0) + random.uniform(-0.3, 0.3)
         if t < self.pico_ate:
             i = 36.0 + random.uniform(-1, 1)
-        return i
+        return self._para_adc(i, protocolo.CORRENTE_FUNDO_ESCALA_A)
+
+    @staticmethod
+    def _para_adc(valor, fundo_escala):
+        return max(0, min(protocolo.ADC_MAXIMO, round(valor / fundo_escala * protocolo.ADC_MAXIMO)))
 
     def _enviar_telemetria(self):
-        self.seq += 1
-        corpo = (f"DATA,{self.seq},{self._tensao():.2f},{self._corrente():.2f},"
-                 f"{1 if self.disjuntor_fechado else 0}")
+        self.botao = time.monotonic() < self.botao_ate
+        corpo = f"DAT,{self._adc_tensao()},{self._adc_corrente()},{1 if self.rele else 0},{1 if self.botao else 0}"
         ck = checksum(corpo)
         if self.corromper > 0:
             self.corromper -= 1
             ck = "00" if ck != "00" else "FF"
-        self._enviar(f"{corpo}*{ck}")
+        self._enviar(f"${corpo}*{ck}")
 
     # ---------------- protocolo ----------------
-    def _processar(self, linha: str):
-        if time.monotonic() < self.travada_ate:
-            return
-        if linha.startswith("HS,"):
-            self._handshake(linha[3:])
-            return
-
-        if self.estado == "AGUARDANDO_HS":
-            self._enviar("NAK,AGUARDANDO_HS")
-        elif self.estado == "AGUARDANDO_SYNC":
-            if linha == "SYNC":
-                if self.baud in self.falhar_bauds:
-                    self._log(f"(falha induzida) SYNC ilegível a {self.baud} bps")
-                    return
-                self._enviar("ACK,SYNC")
-                self.ultimo_envio = time.monotonic()
-                self._mudar_estado("TELEMETRIA")
-        elif self.estado == "TELEMETRIA":
-            if linha == "PING":
-                pass
-            elif linha in ("DJ,0", "DJ,1"):
-                self.disjuntor_fechado = linha.endswith("1")
-                self._enviar(f"ACK,{linha}")
-                self._log("disjuntor " + ("FECHADO" if self.disjuntor_fechado else "ABERTO"))
-            elif linha == "STOP":
-                self._enviar("ACK,STOP")
-                self._voltar_espera()
-            elif linha == "SYNC":
-                self._enviar("ACK,SYNC")
+    def _processar(self, cmd: str):
+        if cmd[0] in "Ss":
+            try:
+                baud = int(cmd[1:]) if cmd[1:] else 115200
+            except ValueError:
+                baud = 0
+            if baud in BAUDS_SUPORTADOS:
+                self._enviar(f">>> ACK: INICIANDO EM {baud} BPS <<<")
+                self._log(f"início da telemetria a {baud} bps")
+                if baud != BAUD_INICIAL:
+                    self._trocar_baud(baud)
+                self.conversao = True
+                self.ultimo_envio = 0.0
             else:
-                self._enviar(f"NAK,CMD_INVALIDO:{linha}")
-
-    def _handshake(self, args: str):
-        partes = args.split(",")
-        if len(partes) != 2:
-            self._enviar("NAK,HS_FORMATO")
-            return
-        try:
-            baud, periodo = int(partes[0]), int(partes[1])
-        except ValueError:
-            self._enviar("NAK,HS_FORMATO")
-            return
-        if baud not in BAUDS_SUPORTADOS:
-            self._enviar("NAK,HS_BAUD")
-            return
-        if not 200 <= periodo <= 5000:
-            self._enviar("NAK,HS_PERIODO")
-            return
-        self.periodo = periodo / 1000.0
-        self._enviar(f"ACK,HS,{baud},{periodo}")
-        self._log(f"handshake recebido: {baud} bps, período {periodo} ms")
-        if baud != self.baud:
-            self._trocar_baud(baud)
-        self._mudar_estado("AGUARDANDO_SYNC")
+                self._enviar(">>> ERR: BAUD INVALIDO. Use 9600, 19200, 38400 ou 115200 <<<")
+        elif cmd.upper() in ("P", "STOP"):
+            self.conversao = False
+            self._enviar("")
+            self._enviar(">>> ACK: CONVERSAO PAUSADA. RETORNANDO A 9600 BPS <<<")
+            self._trocar_baud(BAUD_INICIAL)
+            self._log("conversão pausada: volta a 9600 bps")
+        elif cmd == "1" or cmd.upper() == "L":
+            self.rele = True
+            self._enviar(">>> ACK: RELE LIGADO <<<")
+            self._log("relé LIGADO (disjuntor FECHADO)")
+        elif cmd == "0" or cmd.upper() == "D":
+            self.rele = False
+            self._enviar(">>> ACK: RELE DESLIGADO <<<")
+            self._log("relé DESLIGADO (disjuntor ABERTO)")
+        elif cmd.upper() == "T":
+            self.rele = not self.rele
+            self._enviar(">>> ACK: RELE ALTERNADO <<<")
 
     # ---------------- laço principal ----------------
     def passo(self):
         with self.lock:
             self._ler()
             agora = time.monotonic()
-            if agora < self.travada_ate:
+            if self.estava_travada() or not self.conversao or self.baud in self.falhar_bauds:
                 return
-            if self.estado == "AGUARDANDO_SYNC" and agora - self.instante_estado > TIMEOUT_SYNC:
-                self._log("SYNC não chegou: voltando para 9600")
-                self._voltar_espera()
-            elif self.estado == "TELEMETRIA":
-                if agora - self.ultimo_rx > TIMEOUT_LINK:
-                    self._log("desktop em silêncio: voltando para espera")
-                    self._voltar_espera()
-                elif agora - self.ultimo_envio >= self.periodo:
-                    self.ultimo_envio = agora
-                    self._enviar_telemetria()
+            # a 9600 bps um pacote de ~24 bytes leva ~25 ms: a linha serial limita a taxa
+            intervalo = max(INTERVALO_AMOSTRA, 24 * 10 / self.baud)
+            if agora - self.ultimo_envio >= intervalo:
+                self.ultimo_envio = agora
+                self._enviar_telemetria()
 
     def comando_operador(self, cmd: str):
         with self.lock:
@@ -224,6 +209,9 @@ class PlacaVirtual:
             elif cmd == "m":
                 self.travada_ate = agora + 8
                 self._log("falha induzida: placa travada por 8 s")
+            elif cmd == "b":
+                self.botao_ate = agora + 0.5
+                self._log("botão físico apertado")
             elif cmd == "r":
                 self._log("reinício da placa")
                 self._reiniciar()
@@ -239,22 +227,23 @@ def ler_teclado(placa: PlacaVirtual):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="Simulador da placa Smart Grid")
+    ap = argparse.ArgumentParser(description="Simulador da placa Smart Grid (firmware do professor)")
     ap.add_argument("porta", help="porta serial do lado da placa (ex.: COM11 ou /dev/pts/5)")
     ap.add_argument("--falhar-baud", type=int, nargs="*", default=[],
-                    help="velocidades em que o SYNC 'não chega' (demonstra o fallback)")
+                    help="velocidades em que a placa 'não transmite' (demonstra o fallback)")
+    ap.add_argument("--rele-ligado", action="store_true", help="começa com o relé ligado (o firmware real começa desligado)")
     ap.add_argument("--sem-teclado", action="store_true", help="não lê comandos do stdin")
     args = ap.parse_args()
 
     with serial.Serial(args.porta, BAUD_INICIAL, timeout=0) as porta:
-        placa = PlacaVirtual(porta, args.falhar_baud)
+        placa = PlacaVirtual(porta, args.falhar_baud, args.rele_ligado)
         if not args.sem_teclado:
             threading.Thread(target=ler_teclado, args=(placa,), daemon=True).start()
             print("Comandos: p=pico  t=sobretensão  c=checksum  m=trava  r=reinicia  q=sair")
         try:
             while placa.rodando:
                 placa.passo()
-                time.sleep(0.005)
+                time.sleep(0.002)
         except KeyboardInterrupt:
             pass
         except serial.SerialException as e:

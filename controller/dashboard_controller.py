@@ -111,6 +111,7 @@ class DashboardController(QDialog):
         self.conexao.estado_mudou.connect(self.ao_mudar_estado)
         self.conexao.leitura_recebida.connect(self.ao_receber_leitura)
         self.conexao.disjuntor_confirmado.connect(self.ao_confirmar_disjuntor)
+        self.conexao.botao_emergencia.connect(self.ao_apertar_botao_fisico)
         self.conexao.falha_comunicacao.connect(self.ao_falhar_comunicacao)
         self.persistencia.historico_pronto.connect(self.ao_receber_historico)
         self.persistencia.corte_concluido.connect(self.ao_concluir_corte)
@@ -136,21 +137,30 @@ class DashboardController(QDialog):
         self.ui.lbl_potencia.setText(f"{p:.1f} W")
 
     # ATIVACAO BOTAO DE EMERGENCIA
-    # A1/5: o botão PARAR manda DJ,0 à placa; o corte só é gravado no banco (ACID) depois do ACK dela
+    # A1/5: o botão PARAR manda !0 (desliga o relé) à placa; o corte só é gravado no banco (ACID) depois do ACK dela
     def acionar_emergencia(self):
         self.executar_corte(None)
 
-    def executar_corte(self, motivo_automatico):
+    # BOTAO FISICO DA PLACA (pino 11): mesmo fluxo do botão PARAR da tela
+    def ao_apertar_botao_fisico(self):
+        self.model.registrar_log("EMERGÊNCIA", "Botão físico de emergência da placa apertado.")
+        if self.corte_pendente is not None:
+            return                                   # já há um corte em andamento
+        if self.disjuntor_fechado is False:
+            return                                   # já está aberto: nada a cortar
+        self.executar_corte(None, origem="Botão FÍSICO de emergência da placa acionado!")
+
+    def executar_corte(self, motivo_automatico, origem=None):
         if not self.conexao.enviar_comando(protocolo.cmd_disjuntor(False)):
             QMessageBox.warning(self, "Disjuntor", "Sem link com a placa: comando não enviado.")
             return
         self.motivo_corte_automatico = motivo_automatico
-        self.corte_pendente = ("Botão de PARADA acionado pelo operador!" if motivo_automatico is None
+        self.corte_pendente = ((origem or "Botão de PARADA acionado pelo operador!") if motivo_automatico is None
                                else f"Corte automático: {motivo_automatico}")
         self.timer_ack.start(TIMEOUT_ACK_DJ_MS)
 
     # SIMULA UMA ALAVANCA DE LIGA E DESLIGA DO SISTEMA
-    # A1/5: a alavanca agora comanda o disjuntor de verdade (DJ,1 / DJ,0); o estado exibido vem do ACK da placa
+    # A1/5: a alavanca agora comanda o disjuntor de verdade (!1 / !0); o estado exibido vem do ACK da placa
     def mudar_estado_alavanca(self, estado):
         if self.sincronizando:      # a alavanca foi movida pelo programa (acompanhando a placa), não pelo operador
             return
@@ -171,6 +181,7 @@ class DashboardController(QDialog):
         self.ax.set_title("Consumo em Tempo Real (Últimos 60s)")
         self.ax.set_xlabel("Tempo (s)")
         self.ax.set_ylabel("Potência (W)")
+        self.ax.set_xlim(0, 60)          # janela de 60 s desde o início, mesmo antes da primeira leitura
         self.ax.set_ylim(0, 3500)
         self.ax.grid(True)
         self.fig.subplots_adjust(left=0.18, bottom=0.18, right=0.95, top=0.90)
@@ -270,6 +281,7 @@ class DashboardController(QDialog):
         self.ax.set_title("Consumo em Tempo Real (Últimos 60s)")
         self.ax.set_xlabel("Tempo (s)")
         self.ax.set_ylabel("Potência (W)")
+        self.ax.set_xlim(0, 60)
         self.ax.set_ylim(0, 3500)
         self.ax.grid(True)
         self.fig.subplots_adjust(bottom=0.18)      # margem original do modo tempo real
@@ -362,7 +374,7 @@ class DashboardController(QDialog):
             self.executar_corte(texto_alerta)
 
     def ao_confirmar_disjuntor(self, fechado):
-        #ACK da placa a um DJ,0 / DJ,1
+        #ACK da placa a um !0 / !1 (relé desligado / ligado)
         self.mostrar_disjuntor(fechado)
         corrente = self.ultima_leitura.corrente if self.ultima_leitura else 0.0
 
@@ -432,7 +444,7 @@ class DashboardController(QDialog):
         tela_logs.exec()
 
     # A1/5: ENCERRAMENTO COOPERATIVO
-    # Fechar a janela não mata as threads: a serial para primeiro (envia STOP à placa), depois o banco
+    # Fechar a janela não mata as threads: a serial para primeiro (envia !P à placa), depois o banco
     # grava o que falta e fecha a conexão. Só então a janela fecha de verdade.
     def closeEvent(self, event):
         if getattr(self, "fechamento_liberado", False):
