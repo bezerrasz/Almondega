@@ -30,11 +30,13 @@ em A0 controla a corrente (0 a 40 A); girar até o fim faz a proteção de sobre
   Rode `python simulador/placa_virtual.py COM11` e conecte o app na `COM10`.
 * Linux/macOS: `python tests/par_portas_virtuais.py` mostra dois caminhos `/dev/pts/X`. Use um no simulador e o outro no app.
 
-**Testes:**
+**Testes** (Linux/macOS; no Windows os de serial precisam do com0com):
 ```bash
 python tests/teste_models.py                     # Model: protocolo, regras, JSON, SQLite (15 testes)
-python tests/teste_serial_simulador.py           # SerialWorker x simulador (Linux/macOS)
-python tests/teste_serial_simulador.py --fallback
+python tests/teste_serial_simulador.py           # SerialWorker x simulador: handshake a 115200
+python tests/teste_serial_simulador.py --fallback --segundos 30   # falha a 115200/38400 -> cai para 19200
+python tests/teste_integracao_gui.py             # app completo: tela + 2 threads + SQLite + gráfico + config.json
+python tests/teste_falhas.py                     # cabo puxado e placa travada: reconecta e refaz o handshake
 ```
 
 ---
