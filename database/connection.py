@@ -50,6 +50,22 @@ class Database:
                 );
             """)
 
+            # 4. Tabela de Leituras de telemetria (A1/5): histórico de tensão, corrente e potência
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS leituras (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT NOT NULL,
+                    seq INTEGER,
+                    tensao REAL NOT NULL,
+                    corrente REAL NOT NULL,
+                    potencia REAL NOT NULL,
+                    disjuntor_fechado INTEGER NOT NULL,
+                    dispositivo_id INTEGER NOT NULL DEFAULT 1,
+                    FOREIGN KEY (dispositivo_id) REFERENCES dispositivos (id)
+                );
+            """)
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_leituras_ts ON leituras(timestamp);")
+
             # Inserir o disjuntor padrão para garantir que exista
             cursor.execute("""
                 INSERT OR IGNORE INTO dispositivos (id, tag, tipo, status)
