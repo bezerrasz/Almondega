@@ -210,10 +210,10 @@ class Ui_Dialog(object):
         self.slider_limite = QSlider(self.layoutWidget)
         self.slider_limite.setObjectName(u"slider_limite")
         self.slider_limite.setMinimum(1000)
-        self.slider_limite.setMaximum(4000)
+        self.slider_limite.setMaximum(10000)
         self.slider_limite.setOrientation(Qt.Orientation.Horizontal)
         self.slider_limite.setTickPosition(QSlider.TickPosition.TicksBelow)
-        self.slider_limite.setTickInterval(500)
+        self.slider_limite.setTickInterval(1000)
 
         self.verticalLayout.addWidget(self.slider_limite)
 
@@ -374,8 +374,8 @@ class Ui_Dialog(object):
         self.btn_parar.setText(QCoreApplication.translate("Dialog", u"PARAR", None))
         self.lbl_potencia_2.setText(QCoreApplication.translate("Dialog", u"Limite de Alerta", None))
         self.label_7.setText(QCoreApplication.translate("Dialog", u"1000", None))
-        self.label_8.setText(QCoreApplication.translate("Dialog", u"2500", None))
-        self.label_9.setText(QCoreApplication.translate("Dialog", u"4000", None))
+        self.label_8.setText(QCoreApplication.translate("Dialog", u"5500", None))
+        self.label_9.setText(QCoreApplication.translate("Dialog", u"10000", None))
         self.label_modo.setText(QCoreApplication.translate("Dialog", u"Modo do gr\u00e1fico:", None))
         self.radio_tempo_real.setText(QCoreApplication.translate("Dialog", u"Tempo real", None))
         self.radio_historico.setText(QCoreApplication.translate("Dialog", u"Consulta de hist\u00f3rico", None))
